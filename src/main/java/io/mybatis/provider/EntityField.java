@@ -42,6 +42,7 @@ public class EntityField {
   public EntityField(Class<?> entityClass, Field field) {
     this.entityClass = entityClass;
     this.field = field;
+    this.field.setAccessible(true);
   }
 
   /**
@@ -84,6 +85,34 @@ public class EntityField {
    */
   public boolean isAnnotationPresent(Class<? extends Annotation> annotationClass) {
     return field.isAnnotationPresent(annotationClass);
+  }
+
+  /**
+   * 反射获取字段值
+   *
+   * @param obj 对象
+   * @return 字段值
+   */
+  public Object get(Object obj) {
+    try {
+      return field.get(obj);
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException("反射获取字段值出错", e);
+    }
+  }
+
+  /**
+   * 反射设置字段值
+   *
+   * @param obj   对象
+   * @param value 字段值
+   */
+  public void set(Object obj, Object value) {
+    try {
+      field.set(obj, value);
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException("反射设置字段值出错", e);
+    }
   }
 
 }
