@@ -47,7 +47,7 @@ public class DefaultEntityFactory extends EntityFactory {
       }
       for (Field field : declaredFields) {
         EntityField entityField = new EntityField(entityClass, field);
-        Optional<List<EntityColumn>> optionalEntityColumns = EntityFactory.create(entityField);
+        Optional<List<EntityColumn>> optionalEntityColumns = getWrapper().createEntityColumn(entityField);
         optionalEntityColumns.ifPresent(columns -> columns.forEach(entityTable::addColumn));
       }
       //迭代获取父类
@@ -67,14 +67,12 @@ public class DefaultEntityFactory extends EntityFactory {
    * @return 表名
    */
   private String tableName(Class<?> entityClass) {
-    String tableName;
+    String tableName = null;
     if (entityClass.isAnnotationPresent(Entity.Table.class)) {
       Entity.Table name = entityClass.getAnnotation(Entity.Table.class);
       tableName = name.value();
-    } else {
-      throw new RuntimeException(entityClass.getName() + " 实体类必须配置 @Entity.Table 注解");
     }
-    if (tableName.isEmpty()) {
+    if (tableName == null || tableName.isEmpty()) {
       tableName = entityClass.getSimpleName();
     }
     return tableName;

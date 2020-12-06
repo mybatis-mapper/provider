@@ -24,6 +24,8 @@ import java.util.*;
 
 /**
  * 实体类信息工厂，可以通过 SPI 加入处理链
+ *
+ * @author liuzh
  */
 public abstract class EntityFactory {
   /**
@@ -34,6 +36,10 @@ public abstract class EntityFactory {
    * 下一个执行的工厂方法（责任链模式）
    */
   private       EntityFactory next;
+  /**
+   * 外层工厂方法
+   */
+  private       EntityFactory wrapper;
 
   /**
    * 获取类型对应的实体信息
@@ -67,16 +73,6 @@ public abstract class EntityFactory {
   }
 
   /**
-   * 创建列信息
-   *
-   * @param field 字段信息
-   * @return 实体类中列的信息
-   */
-  public static Optional<List<EntityColumn>> create(EntityField field) {
-    return EntityFactoryInstance.getInstance().createEntityColumn(field);
-  }
-
-  /**
    * @return 执行顺序（想象多个同心环，顺序号越小，执行越靠内，越大越靠外）
    */
   public int getOrder() {
@@ -99,6 +95,31 @@ public abstract class EntityFactory {
    */
   public EntityFactory next() {
     return this.next;
+  }
+
+  /**
+   * 获取最外层对象
+   *
+   * @return 最外层对象
+   */
+  public EntityFactory getWrapper() {
+    if (next != null) {
+      return next.getWrapper();
+    }
+    return wrapper;
+  }
+
+  /**
+   * 设置最外层对象
+   *
+   * @param wrapper 最外层对象
+   */
+  void setWrapper(EntityFactory wrapper) {
+    if (next != null) {
+      next.setWrapper(wrapper);
+    } else {
+      this.wrapper = wrapper;
+    }
   }
 
   /**
@@ -162,6 +183,7 @@ public abstract class EntityFactory {
             }
             //增加缓存功能
             INSTANCE = new CachingEntityFactory(INSTANCE);
+            INSTANCE.setWrapper(INSTANCE);
           }
         }
       }

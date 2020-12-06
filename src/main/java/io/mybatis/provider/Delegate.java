@@ -20,6 +20,8 @@ import java.util.Optional;
 
 /**
  * 代理链封装，多级代理时，提供 {@link Delegate#delegate(Class)} 方法从多层代理中获取指定类型的对象
+ *
+ * @author liuzh
  */
 public class Delegate<T extends Delegate> {
   protected T delegate;
