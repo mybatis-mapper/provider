@@ -25,7 +25,7 @@ import org.apache.ibatis.annotations.SelectProvider;
 /**
  * 测试接口泛型参数识别类型，故意调换的两个泛型参数顺序，正常应该找到第二个泛型参数
  */
-public interface BaseMapper<ID, T> extends BaseMapper2<Long> {
+public interface BaseMapper<ID, T> extends BaseMapper2<Long, T> {
 
   @Lang(Caching.class)
   @SelectProvider(type = BaseProvider.class, method = "getById")

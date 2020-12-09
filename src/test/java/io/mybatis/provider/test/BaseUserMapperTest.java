@@ -18,6 +18,7 @@ package io.mybatis.provider.test;
 
 import io.mybatis.provider.BaseTest;
 import io.mybatis.provider.mapper.BaseUserMapper;
+import io.mybatis.provider.model.BaseUser;
 import io.mybatis.provider.model.User;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.Assert;
@@ -49,5 +50,12 @@ public class BaseUserMapperTest extends BaseTest {
     }
   }
 
+  @Test
+  public void testEntityInfo() {
+    try (SqlSession sqlSession = getSqlSession()) {
+      BaseUserMapper baseUserMapper = sqlSession.getMapper(BaseUserMapper.class);
+      Assert.assertEquals(BaseUser.class, baseUserMapper.entityClass());
+    }
+  }
 
 }

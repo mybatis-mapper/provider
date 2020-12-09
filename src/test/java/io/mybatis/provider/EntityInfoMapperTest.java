@@ -14,11 +14,31 @@
  * limitations under the License.
  */
 
-package io.mybatis.provider.mapper;
+package io.mybatis.provider;
 
-import io.mybatis.provider.EntityInfoMapper;
+import org.junit.Assert;
+import org.junit.Test;
 
-import java.io.Serializable;
+public class EntityInfoMapperTest {
 
-public interface BaseMapper2<ID extends Serializable, T> extends EntityInfoMapper<T> {
+  @Test
+  public void test() {
+    UserMapper userMapper = new UserMapper() {
+    };
+    Assert.assertEquals(User.class, userMapper.entityClass());
+
+    EntityTable entityTable = userMapper.entityTable();
+    Assert.assertEquals("sys_user", entityTable.table());
+  }
+
+  interface UserMapper extends EntityInfoMapper<User> {
+
+  }
+
+  @Entity.Table("sys_user")
+  class User {
+//    @Entity.Column(id = true)
+//    private Long id;
+  }
+
 }

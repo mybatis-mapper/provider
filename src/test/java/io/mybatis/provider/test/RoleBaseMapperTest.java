@@ -19,6 +19,7 @@ package io.mybatis.provider.test;
 import io.mybatis.provider.BaseTest;
 import io.mybatis.provider.mapper.RoleBaseMapper;
 import io.mybatis.provider.mapper.UserMapper;
+import io.mybatis.provider.model.Role;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,6 +42,14 @@ public class RoleBaseMapperTest extends BaseTest {
       Assert.assertEquals(1, roleMapper.deleteUserById(1L));
       UserMapper userMapper = sqlSession.getMapper(UserMapper.class);
       Assert.assertNull(userMapper.getById(1L));
+    }
+  }
+
+  @Test
+  public void testEntityInfo() {
+    try (SqlSession sqlSession = getSqlSession()) {
+      RoleBaseMapper roleMapper = sqlSession.getMapper(RoleBaseMapper.class);
+      Assert.assertEquals(Role.class, roleMapper.entityClass());
     }
   }
 

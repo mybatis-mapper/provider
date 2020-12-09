@@ -116,7 +116,7 @@ public class GenericTypeResolver {
     return result;
   }
 
-  private static Type resolveType(Type type, Type srcType, Class<?> declaringClass) {
+  public static Type resolveType(Type type, Type srcType, Class<?> declaringClass) {
     if (type instanceof TypeVariable) {
       return resolveTypeVar((TypeVariable<?>) type, srcType, declaringClass);
     } else if (type instanceof ParameterizedType) {
