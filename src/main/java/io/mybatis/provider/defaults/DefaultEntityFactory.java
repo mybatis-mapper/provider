@@ -54,10 +54,6 @@ public class DefaultEntityFactory extends EntityFactory {
       declaredClass = declaredClass.getSuperclass();
       isSuperclass = true;
     }
-    if (entityTable.idColumns().isEmpty()) {
-      throw new NullPointerException(entityClass.getName()
-          + " 必须提供主键，请在主键字段上添加 @Entity.Column(id = true) 注解");
-    }
   }
 
   /**

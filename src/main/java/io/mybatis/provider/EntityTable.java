@@ -124,10 +124,14 @@ public class EntityTable extends Delegate<EntityTable> {
   //<editor-fold desc="根据基础方法能直接实现的默认方法，实现方法时要避免破坏接口间的调用关系">
 
   /**
-   * 返回主键列，不会为空，当根据主键作为条件时，必须使用当前方法返回的列
+   * 返回主键列，不会为空，当根据主键作为条件时，必须使用当前方法返回的列，没有设置主键时，当前方法返回所有列
    */
   public List<EntityColumn> idColumns() {
-    return columns().stream().filter(EntityColumn::isId).collect(Collectors.toList());
+    List<EntityColumn> idColumns = columns().stream().filter(EntityColumn::isId).collect(Collectors.toList());
+    if (idColumns.isEmpty()) {
+      return columns();
+    }
+    return idColumns;
   }
 
   /**
