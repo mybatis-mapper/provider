@@ -77,6 +77,8 @@ public class EntityTable extends Delegate<EntityTable> {
 
   /**
    * 返回所有列
+   *
+   * @return 所有列信息
    */
   public List<EntityColumn> columns() {
     if (delegate != null) {
@@ -86,6 +88,33 @@ public class EntityTable extends Delegate<EntityTable> {
       this.columns = new ArrayList<>();
     }
     return columns;
+  }
+
+  /**
+   * 返回所有字段
+   *
+   * @return 所有字段
+   */
+  public List<EntityField> fields() {
+    return columns().stream().map(EntityColumn::field).collect(Collectors.toList());
+  }
+
+  /**
+   * 返回所有列名
+   *
+   * @return 所有列名
+   */
+  public List<String> columnNames() {
+    return columns().stream().map(EntityColumn::column).collect(Collectors.toList());
+  }
+
+  /**
+   * 返回所有属性名
+   *
+   * @return 所有属性名
+   */
+  public List<String> properties() {
+    return columns().stream().map(EntityColumn::property).collect(Collectors.toList());
   }
 
   /**
