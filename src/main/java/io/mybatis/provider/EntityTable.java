@@ -113,7 +113,7 @@ public class EntityTable extends Delegate<EntityTable> {
    *
    * @return 所有属性名
    */
-  public List<String> properties() {
+  public List<String> fieldNames() {
     return columns().stream().map(EntityColumn::property).collect(Collectors.toList());
   }
 
