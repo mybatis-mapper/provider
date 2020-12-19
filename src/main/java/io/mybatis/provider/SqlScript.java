@@ -26,6 +26,20 @@ import java.util.function.Supplier;
  * @author liuzh
  */
 public interface SqlScript {
+  /**
+   * 换行符
+   */
+  String LF = "\n";
+
+  /**
+   * 生成 where 标签包装的 xml 结构
+   *
+   * @param content 标签中的内容
+   * @return where 标签包装的 xml 结构
+   */
+  default String where(LRSupplier content) {
+    return String.format("\n<where>%s\n</where> ", content.getWithLR());
+  }
 
   /**
    * 创建SQL并缓存
@@ -60,23 +74,13 @@ public interface SqlScript {
   String getSql(EntityTable entity);
 
   /**
-   * 生成 where 标签包装的 xml 结构
-   *
-   * @param content 标签中的内容
-   * @return where 标签包装的 xml 结构
-   */
-  default String where(Supplier<String> content) {
-    return String.format("\n<where>\n%s\n</where> ", content.get());
-  }
-
-  /**
    * 生成 choose 标签包装的 xml 结构
    *
    * @param content 标签中的内容
    * @return choose 标签包装的 xml 结构
    */
-  default String choose(Supplier<String> content) {
-    return String.format("\n<choose>\n%s\n</choose> ", content.get());
+  default String choose(LRSupplier content) {
+    return String.format("\n<choose>%s\n</choose> ", content.getWithLR());
   }
 
   /**
@@ -85,8 +89,8 @@ public interface SqlScript {
    * @param content 标签中的内容
    * @return otherwise 标签包装的 xml 结构
    */
-  default String otherwise(Supplier<String> content) {
-    return String.format("\n<otherwise>\n%s\n</otherwise> ", content.get());
+  default String otherwise(LRSupplier content) {
+    return String.format("\n<otherwise>%s\n</otherwise> ", content.getWithLR());
   }
 
   /**
@@ -95,8 +99,8 @@ public interface SqlScript {
    * @param content 标签中的内容
    * @return set 标签包装的 xml 结构
    */
-  default String set(Supplier<String> content) {
-    return String.format("\n<set>\n%s\n</set> ", content.get());
+  default String set(LRSupplier content) {
+    return String.format("\n<set>%s\n</set> ", content.getWithLR());
   }
 
   /**
@@ -106,18 +110,39 @@ public interface SqlScript {
    * @param content 标签中的内容
    * @return if 标签包装的 xml 结构
    */
-  default String ifTest(String test, Supplier<String> content) {
-    return String.format("<if test=\"%s\">\n%s\n</if> ", test, content.get());
+  default String ifTest(String test, LRSupplier content) {
+    return String.format("<if test=\"%s\">%s\n</if> ", test, content.getWithLR());
   }
 
   /**
-   * 生成 &lt;if test="_parameter != null"&gt; 标签包装的 xml 结构
+   * 生成 &lt;if test="_parameter != null"&gt; 标签包装的 xml 结构，允许参数为空时使用，
+   * 当参数必填时，可以使用 {@link #parameterNotNull(String)} 方法
    *
    * @param content 标签中的内容
    * @return &lt;if test="_parameter != null"&gt; 标签包装的 xml 结构
    */
-  default String ifParameterNotNull(Supplier<String> content) {
-    return String.format("\n<if test=\"_parameter != null\">\n%s\n</if> ", content.get());
+  default String ifParameterNotNull(LRSupplier content) {
+    return String.format("<if test=\"_parameter != null\">%s\n</if> ", content.getWithLR());
+  }
+
+  /**
+   * 增加对参数的校验，参数不能为空，为空则抛出异常
+   *
+   * @param message 提示信息
+   * @return 在代码基础上增加一段校验
+   */
+  default String parameterNotNull(String message) {
+    return parameterNotNull("_parameter", message);
+  }
+
+  /**
+   * 增加对参数的校验，参数不能为空，为空则抛出异常
+   *
+   * @param message 提示信息
+   * @return 在代码基础上增加一段校验
+   */
+  default String parameterNotNull(String variable, String message) {
+    return "\n${@io.mybatis.common.util.Assert@notNull(" + variable + ", '" + message + "')}\n";
   }
 
   /**
@@ -127,8 +152,8 @@ public interface SqlScript {
    * @param content 标签中的内容
    * @return when 标签包装的 xml 结构
    */
-  default String whenTest(String test, Supplier<String> content) {
-    return String.format("\n<when test=\"%s\">\n%s\n</when> ", test, content.get());
+  default String whenTest(String test, LRSupplier content) {
+    return String.format("\n<when test=\"%s\">%s\n</when> ", test, content.getWithLR());
   }
 
   /**
@@ -141,9 +166,9 @@ public interface SqlScript {
    * @param content         标签中的内容
    * @return trim 标签包装的 xml 结构
    */
-  default String trim(String prefix, String suffix, String prefixOverrides, String suffixOverrides, Supplier<String> content) {
-    return String.format("\n<trim prefix=\"%s\" prefixOverrides=\"%s\" suffixOverrides=\"%s\" suffix=\"%s\">\n%s\n</trim> "
-        , prefix, prefixOverrides, suffixOverrides, suffix, content.get());
+  default String trim(String prefix, String suffix, String prefixOverrides, String suffixOverrides, LRSupplier content) {
+    return String.format("\n<trim prefix=\"%s\" prefixOverrides=\"%s\" suffixOverrides=\"%s\" suffix=\"%s\">%s\n</trim> "
+        , prefix, prefixOverrides, suffixOverrides, suffix, content.getWithLR());
   }
 
   /**
@@ -155,10 +180,9 @@ public interface SqlScript {
    * @param content         标签中的内容
    * @return trim 标签包装的 xml 结构
    */
-  default String trimPrefixOverrides(String prefix, String suffix, String prefixOverrides, Supplier<String> content) {
-    return String.format("\n<trim prefix=\"%s\" prefixOverrides=\"%s\" suffix=\"%s\">\n%s\n</trim> ", prefix, prefixOverrides, suffix, content.get());
+  default String trimPrefixOverrides(String prefix, String suffix, String prefixOverrides, LRSupplier content) {
+    return String.format("\n<trim prefix=\"%s\" prefixOverrides=\"%s\" suffix=\"%s\">%s\n</trim> ", prefix, prefixOverrides, suffix, content.getWithLR());
   }
-
 
   /**
    * 生成 trim 标签包装的 xml 结构
@@ -169,8 +193,8 @@ public interface SqlScript {
    * @param content         标签中的内容
    * @return trim 标签包装的 xml 结构
    */
-  default String trimSuffixOverrides(String prefix, String suffix, String suffixOverrides, Supplier<String> content) {
-    return String.format("\n<trim prefix=\"%s\" suffixOverrides=\"%s\" suffix=\"%s\">\n%s\n</trim> ", prefix, suffixOverrides, suffix, content.get());
+  default String trimSuffixOverrides(String prefix, String suffix, String suffixOverrides, LRSupplier content) {
+    return String.format("\n<trim prefix=\"%s\" suffixOverrides=\"%s\" suffix=\"%s\">%s\n</trim> ", prefix, suffixOverrides, suffix, content.getWithLR());
   }
 
   /**
@@ -181,8 +205,8 @@ public interface SqlScript {
    * @param content    标签中的内容
    * @return foreach 标签包装的 xml 结构
    */
-  default String foreach(String collection, String item, Supplier<String> content) {
-    return String.format("\n<foreach collection=\"%s\" item=\"%s\">\n%s\n</foreach> ", collection, item, content.get());
+  default String foreach(String collection, String item, LRSupplier content) {
+    return String.format("\n<foreach collection=\"%s\" item=\"%s\">%s\n</foreach> ", collection, item, content.getWithLR());
   }
 
   /**
@@ -194,9 +218,9 @@ public interface SqlScript {
    * @param content    标签中的内容
    * @return foreach 标签包装的 xml 结构
    */
-  default String foreach(String collection, String item, String separator, Supplier<String> content) {
-    return String.format("\n<foreach collection=\"%s\" item=\"%s\" separator=\"%s\">\n%s\n</foreach> "
-        , collection, item, separator, content.get());
+  default String foreach(String collection, String item, String separator, LRSupplier content) {
+    return String.format("\n<foreach collection=\"%s\" item=\"%s\" separator=\"%s\">%s\n</foreach> "
+        , collection, item, separator, content.getWithLR());
   }
 
   /**
@@ -210,9 +234,9 @@ public interface SqlScript {
    * @param content    标签中的内容
    * @return foreach 标签包装的 xml 结构
    */
-  default String foreach(String collection, String item, String separator, String open, String close, Supplier<String> content) {
-    return String.format("\n<foreach collection=\"%s\" item=\"%s\" open=\"%s\" close=\"%s\" separator=\"%s\">\n%s\n</foreach> "
-        , collection, item, open, close, separator, content.get());
+  default String foreach(String collection, String item, String separator, String open, String close, LRSupplier content) {
+    return String.format("\n<foreach collection=\"%s\" item=\"%s\" open=\"%s\" close=\"%s\" separator=\"%s\">%s\n</foreach> "
+        , collection, item, open, close, separator, content.getWithLR());
   }
 
   /**
@@ -227,9 +251,24 @@ public interface SqlScript {
    * @param content    标签中的内容
    * @return foreach 标签包装的 xml 结构
    */
-  default String foreach(String collection, String item, String separator, String open, String close, String index, Supplier<String> content) {
-    return String.format("\n<foreach collection=\"%s\" item=\"%s\" index=\"%s\" open=\"%s\" close=\"%s\" separator=\"%s\">\n%s\n</foreach> "
-        , collection, item, index, open, close, separator, content.get());
+  default String foreach(String collection, String item, String separator, String open, String close, String index, LRSupplier content) {
+    return String.format("\n<foreach collection=\"%s\" item=\"%s\" index=\"%s\" open=\"%s\" close=\"%s\" separator=\"%s\">%s\n</foreach> "
+        , collection, item, index, open, close, separator, content.getWithLR());
+  }
+
+  /**
+   * 保证所有字符串前面都有换行符
+   */
+  interface LRSupplier extends Supplier<String> {
+
+    default String getWithLR() {
+      String str = get();
+      if (!str.isEmpty() && str.charAt(0) == LF.charAt(0)) {
+        return str;
+      }
+      return LF + str;
+    }
+
   }
 
   /**

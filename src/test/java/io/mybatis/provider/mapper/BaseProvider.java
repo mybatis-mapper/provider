@@ -22,6 +22,8 @@ import org.apache.ibatis.builder.annotation.ProviderContext;
 
 import java.util.stream.Collectors;
 
+import static io.mybatis.provider.SqlScript.LF;
+
 public class BaseProvider {
 
   public static String getById(ProviderContext providerContext) {
@@ -42,10 +44,10 @@ public class BaseProvider {
             + util.trimSuffixOverrides("(", ")", ",", () ->
             entity.insertColumns().stream().map(column ->
                 util.ifTest(column.notNullTest(), () -> column.column() + ",")
-            ).collect(Collectors.joining("\n")))
+            ).collect(Collectors.joining(LF)))
             + util.trimSuffixOverrides(" VALUES (", ")", ",", () ->
             entity.insertColumns().stream().map(column ->
                 util.ifTest(column.notNullTest(), () -> column.variables() + ",")
-            ).collect(Collectors.joining("\n"))));
+            ).collect(Collectors.joining(LF))));
   }
 }
