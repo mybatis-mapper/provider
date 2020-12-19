@@ -24,18 +24,18 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 实体类信息接口，继承当前接口即可在接口中方便的获取当前接口对应的实体类类型 {@link Class}和实体表的信息 {@link EntityTable}
  *
- * @param <Entity> 实体类泛型
+ * @param <T> 实体类泛型
  * @author liuzh
  */
-public interface EntityInfoMapper<Entity> {
+public interface EntityInfoMapper<T> {
 
   /**
    * 获取当前接口对应的实体类类型
    *
    * @return 当前接口对应的实体类类型
    */
-  default Class<Entity> entityClass() {
-    return (Class<Entity>) CachingEntityClass.getEntityClass(getClass());
+  default Class<T> entityClass() {
+    return (Class<T>) CachingEntityClass.getEntityClass(getClass());
   }
 
   /**
