@@ -53,8 +53,8 @@ public abstract class EntityFactory {
     if (optionalClass.isPresent()) {
       return create(optionalClass.get());
     }
-    throw new RuntimeException("无法获取 " + (mapperMethod != null ?
-        mapperMethod.getName() + " 方法" : mapperType.getSimpleName() + " 接口") + "对应的实体类");
+    throw new RuntimeException("Can't obtain " + (mapperMethod != null ?
+        mapperMethod.getName() + " method" : mapperType.getSimpleName() + " interface") + " corresponding entity class");
   }
 
   /**

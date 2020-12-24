@@ -146,6 +146,16 @@ public interface SqlScript {
   }
 
   /**
+   * 增加对参数的校验，参数不能为空，为空则抛出异常
+   *
+   * @param message 提示信息
+   * @return 在代码基础上增加一段校验
+   */
+  default String parameterNotEmpty(String variable, String message) {
+    return "\n${@io.mybatis.common.util.Assert@notEmpty(" + variable + ", '" + message + "')}\n";
+  }
+
+  /**
    * 生成 when 标签包装的 xml 结构
    *
    * @param test    when 的判断条件

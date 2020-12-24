@@ -21,7 +21,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.mybatis</groupId>
-    <artifactId>provider</artifactId>
+    <artifactId>mybatis-provider</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
     <!--添加其他的配置-->

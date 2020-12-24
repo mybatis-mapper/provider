@@ -97,7 +97,7 @@ public class EntityField {
     try {
       return field.get(obj);
     } catch (IllegalAccessException e) {
-      throw new RuntimeException("反射获取字段值出错", e);
+      throw new RuntimeException("Error getting field value by reflection", e);
     }
   }
 
@@ -111,7 +111,7 @@ public class EntityField {
     try {
       field.set(obj, value);
     } catch (IllegalAccessException e) {
-      throw new RuntimeException("反射设置字段值出错", e);
+      throw new RuntimeException("Error in reflection setting field value", e);
     }
   }
 

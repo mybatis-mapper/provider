@@ -48,10 +48,10 @@ public class EntityColumn extends Delegate<EntityColumn> {
   public EntityColumn(EntityField field, String column, boolean id) {
     super(null);
     if (column == null || column.isEmpty()) {
-      throw new NullPointerException("列名 column 不能为空");
+      throw new NullPointerException("The column name cannot be empty");
     }
     if (field == null) {
-      throw new NullPointerException("列对应 Java 字段 field 不能为空");
+      throw new NullPointerException("The column corresponding to the Java field cannot be empty");
     }
     this.column = column;
     this.field = field;

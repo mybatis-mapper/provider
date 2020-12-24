@@ -65,7 +65,7 @@ public class Caching extends XMLLanguageDriver {
         return;
       }
     }
-    throw new RuntimeException(mapperMethod + " 需要配置 @Lang(Caching.class) 才能使用 Caching.cache 方法进行缓存");
+    throw new RuntimeException(mapperMethod + " need to configure @Lang(Caching.class) to use the Caching.cache method for caching");
   }
 
   /**
