@@ -18,7 +18,7 @@ package io.mybatis.provider.defaults;
 
 import org.junit.Test;
 
-public class CachingEntityFactoryTest {
+public class CachingEntityTableFactoryTest {
 
   @Test
   public void getEntityTable() {

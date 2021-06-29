@@ -16,20 +16,17 @@
 
 package io.mybatis.provider;
 
-import io.mybatis.provider.defaults.DefaultEntityClassFinder;
-
 import java.lang.reflect.Method;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.ServiceLoader;
 
 /**
  * 根据类型和方法等信息获取实体类类型，可以通过 SPI 方式替换默认实现
  *
  * @author liuzh
  */
-public interface EntityClassFinder {
+public interface EntityClassFinder extends Order {
 
   /**
    * 查找当前方法对应的实体类
@@ -40,7 +37,13 @@ public interface EntityClassFinder {
    */
   static Optional<Class<?>> find(Class<?> mapperType, Method mapperMethod) {
     Objects.requireNonNull(mapperType);
-    return EntityClassFinderInstance.getInstance().findEntityClass(mapperType, mapperMethod);
+    for (EntityClassFinder instance : EntityClassFinderInstance.getInstances()) {
+      Optional<Class<?>> optionalClass = instance.findEntityClass(mapperType, mapperMethod);
+      if (optionalClass.isPresent()) {
+        return optionalClass;
+      }
+    }
+    return Optional.empty();
   }
 
   /**
@@ -64,28 +67,22 @@ public interface EntityClassFinder {
    * 实例
    */
   class EntityClassFinderInstance {
-    private static volatile EntityClassFinder INSTANCE;
+    private static volatile List<EntityClassFinder> INSTANCES;
 
     /**
      * 通过 SPI 获取扩展的实现或使用默认实现
      *
      * @return 实例
      */
-    public static EntityClassFinder getInstance() {
-      if (INSTANCE == null) {
+    public static List<EntityClassFinder> getInstances() {
+      if (INSTANCES == null) {
         synchronized (EntityClassFinder.class) {
-          if (INSTANCE == null) {
-            ServiceLoader<EntityClassFinder> factories = ServiceLoader.load(EntityClassFinder.class);
-            Iterator<EntityClassFinder> iterator = factories.iterator();
-            if (iterator.hasNext()) {
-              INSTANCE = iterator.next();
-            } else {
-              INSTANCE = new DefaultEntityClassFinder();
-            }
+          if (INSTANCES == null) {
+            INSTANCES = ServiceLoaderUtil.getInstances(EntityClassFinder.class);
           }
         }
       }
-      return INSTANCE;
+      return INSTANCES;
     }
   }
 

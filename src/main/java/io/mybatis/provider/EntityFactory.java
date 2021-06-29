@@ -16,30 +16,20 @@
 
 package io.mybatis.provider;
 
-import io.mybatis.provider.defaults.CachingEntityFactory;
-import io.mybatis.provider.defaults.DefaultEntityFactory;
+import io.mybatis.provider.defaults.DefaultEntityColumnFactoryChain;
+import io.mybatis.provider.defaults.DefaultEntityTableFactoryChain;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 /**
- * 实体类信息工厂，可以通过 SPI 加入处理链
+ * 实体类信息工厂
  *
  * @author liuzh
  */
 public abstract class EntityFactory {
-  /**
-   * 默认顺序，最低优先级（最后执行）
-   */
-  public static int           DEFAULT_ORDER = 0;
-  /**
-   * 下一个执行的工厂方法（责任链模式）
-   */
-  private       EntityFactory next;
-  /**
-   * 外层工厂方法
-   */
-  private       EntityFactory wrapper;
 
   /**
    * 获取类型对应的实体信息
@@ -54,7 +44,7 @@ public abstract class EntityFactory {
       return create(optionalClass.get());
     }
     throw new RuntimeException("Can't obtain " + (mapperMethod != null ?
-        mapperMethod.getName() + " method" : mapperType.getSimpleName() + " interface") + " corresponding entity class");
+      mapperMethod.getName() + " method" : mapperType.getSimpleName() + " interface") + " corresponding entity class");
   }
 
   /**
@@ -64,130 +54,94 @@ public abstract class EntityFactory {
    * @return 实体类信息
    */
   public static EntityTable create(Class<?> entityClass) {
-    EntityFactory factory = EntityFactoryInstance.getInstance();
+    //处理EntityTable
+    EntityTableFactory.Chain entityTableFactoryChain = EntityFactoryInstance.getEntityTableFactoryChainInstance();
     //创建 EntityTable，不处理列（字段），此时返回的 EntityTable 已经经过了所有处理链的加工
-    EntityTable entityTable = factory.createEntityTable(entityClass);
-    //处理 EntityTable 中的所有列
-    factory.assembleEntityColumns(entityTable);
+    EntityTable entityTable = entityTableFactoryChain.createEntityTable(entityClass);
+    if (entityTable == null) {
+      throw new NullPointerException("无法获取 " + entityClass.getName() + " 对应的实体类信息");
+    }
+    //如果实体表已经处理好，直接返回
+    if (entityTable.ready()) {
+      return entityTable;
+    }
+    //处理EntityColumn
+    EntityColumnFactory.Chain entityColumnFactoryChain = EntityFactoryInstance.getEntityColumnFactoryChainInstance();
+    //未处理的需要获取字段
+    Class<?> declaredClass = entityClass;
+    boolean isSuperclass = false;
+    while (declaredClass != null && declaredClass != Object.class) {
+      Field[] declaredFields = declaredClass.getDeclaredFields();
+      if (isSuperclass) {
+        reverse(declaredFields);
+      }
+      for (Field field : declaredFields) {
+        EntityField entityField = new EntityField(entityClass, field);
+        Optional<List<EntityColumn>> optionalEntityColumns = entityColumnFactoryChain.createEntityColumn(entityTable, entityField);
+        optionalEntityColumns.ifPresent(columns -> columns.forEach(entityTable::addColumn));
+      }
+      //迭代获取父类
+      declaredClass = declaredClass.getSuperclass();
+      isSuperclass = true;
+    }
+    //标记处理完成
+    entityTable.ready(true);
     return entityTable;
   }
 
   /**
-   * @return 执行顺序（想象多个同心环，顺序号越小，执行越靠内，越大越靠外）
-   */
-  public int getOrder() {
-    return DEFAULT_ORDER;
-  }
-
-  /**
-   * 设置下一个处理器
+   * 反转排序
    *
-   * @param next 下一个处理器
+   * @param array 数组
    */
-  protected void setNext(EntityFactory next) {
-    this.next = next;
-  }
-
-  /**
-   * 获取下一个处理器
-   *
-   * @return 下一个处理器
-   */
-  public EntityFactory next() {
-    return this.next;
-  }
-
-  /**
-   * 获取最外层对象
-   *
-   * @return 最外层对象
-   */
-  public EntityFactory getWrapper() {
-    if (next != null) {
-      return next.getWrapper();
-    }
-    return wrapper;
-  }
-
-  /**
-   * 设置最外层对象
-   *
-   * @param wrapper 最外层对象
-   */
-  void setWrapper(EntityFactory wrapper) {
-    if (next != null) {
-      next.setWrapper(wrapper);
-    } else {
-      this.wrapper = wrapper;
+  protected static void reverse(Object[] array) {
+    for (int i = 0; i < array.length / 2; i++) {
+      Object temp = array[i];
+      array[i] = array[array.length - i - 1];
+      array[array.length - i - 1] = temp;
     }
   }
-
-  /**
-   * 根据实体类创建 EntityTable，可以使用自己的注解来实现，这一步只返回 EntityTable，不处理其中的字段
-   *
-   * @param entityClass 实体类类型
-   * @return 实体类信息
-   */
-  public abstract EntityTable createEntityTable(Class<?> entityClass);
-
-  /**
-   * 生成实体表中的字段信息
-   *
-   * @param entityTable 实体类信息
-   */
-  public abstract void assembleEntityColumns(EntityTable entityTable);
-
-  /**
-   * 创建列信息，一个字段可能不是列，也可能是列，还有可能对应多个列（例如 ValueObject对象）
-   *
-   * @param field 字段信息
-   * @return 实体类中列的信息，如果返回空，则不属于实体中的列
-   */
-  public abstract Optional<List<EntityColumn>> createEntityColumn(EntityField field);
 
   /**
    * 实例
    */
   static class EntityFactoryInstance {
-    private static volatile EntityFactory INSTANCE;
+    private static volatile EntityTableFactory.Chain  entityTableFactoryChain;
+    private static volatile EntityColumnFactory.Chain entityColumnFactoryChain;
 
     /**
-     * 通过 SPI 获取扩展的实现或使用默认实现
+     * 获取处理实体的工厂链
      *
      * @return 实例
      */
-    public static EntityFactory getInstance() {
-      if (INSTANCE == null) {
+    public static EntityTableFactory.Chain getEntityTableFactoryChainInstance() {
+      if (entityTableFactoryChain == null) {
         synchronized (EntityFactory.class) {
-          if (INSTANCE == null) {
-            //SPI获取所有实现类
-            ServiceLoader<EntityFactory> factoryServiceLoader = ServiceLoader.load(EntityFactory.class);
-            List<EntityFactory> factories = new ArrayList<>();
-            for (EntityFactory factory : factoryServiceLoader) {
-              factories.add(factory);
-            }
-            //没有发现SPI方式的实现类时，直接使用默认的实现
-            if (factories.isEmpty()) {
-              INSTANCE = new DefaultEntityFactory();
-            } else {
-              //SPI实现类存在时，先倒序排列（序号越大越早执行）
-              factories.sort(Comparator.comparing(EntityFactory::getOrder).reversed());
-              for (int i = 0; i < factories.size() - 1; i++) {
-                //设置 next 链
-                factories.get(i).setNext(factories.get(i + 1));
-              }
-              //将默认实现放到最后一个处理链中
-              factories.get(factories.size() - 1).setNext(new DefaultEntityFactory());
-              //返回链头作为示例
-              INSTANCE = factories.get(0);
-            }
-            //增加缓存功能
-            INSTANCE = new CachingEntityFactory(INSTANCE);
-            INSTANCE.setWrapper(INSTANCE);
+          if (entityTableFactoryChain == null) {
+            List<EntityTableFactory> entityTableFactories = ServiceLoaderUtil.getInstances(EntityTableFactory.class);
+            entityTableFactoryChain = new DefaultEntityTableFactoryChain(entityTableFactories);
           }
         }
       }
-      return INSTANCE;
+      return entityTableFactoryChain;
+    }
+
+    /**
+     * 获取处理列的工厂链
+     *
+     * @return 实例
+     */
+    public static EntityColumnFactory.Chain getEntityColumnFactoryChainInstance() {
+      if (entityColumnFactoryChain == null) {
+        synchronized (EntityFactory.class) {
+          if (entityColumnFactoryChain == null) {
+            List<EntityColumnFactory> entityColumnFactories = ServiceLoaderUtil.getInstances(EntityColumnFactory.class);
+            entityColumnFactoryChain = new DefaultEntityColumnFactoryChain(entityColumnFactories);
+          }
+        }
+      }
+      return entityColumnFactoryChain;
     }
   }
+
 }

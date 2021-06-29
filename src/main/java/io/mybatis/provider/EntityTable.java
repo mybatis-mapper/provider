@@ -16,13 +16,27 @@
 
 package io.mybatis.provider;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import org.apache.ibatis.annotations.SelectProvider;
 import org.apache.ibatis.builder.annotation.ProviderContext;
+import org.apache.ibatis.mapping.ResultFlag;
+import org.apache.ibatis.mapping.ResultMap;
+import org.apache.ibatis.mapping.ResultMapping;
+import org.apache.ibatis.reflection.MetaObject;
+import org.apache.ibatis.reflection.SystemMetaObject;
 import org.apache.ibatis.session.Configuration;
+import org.apache.ibatis.type.JdbcType;
+import org.apache.ibatis.type.TypeException;
+import org.apache.ibatis.type.TypeHandler;
+import org.apache.ibatis.type.UnknownTypeHandler;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.lang.reflect.Constructor;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -30,49 +44,62 @@ import java.util.stream.Collectors;
  *
  * @author liuzh
  */
-public class EntityTable extends Delegate<EntityTable> {
+@Accessors(fluent = true)
+public class EntityTable extends EntityProps {
+  public static final Pattern            DELIMITER       = Pattern.compile("^[`\\[\"]?(.*?)[`\\]\"]?$");
+  public static final String             RESULT_MAP_NAME = "BaseProviderResultMap";
   /**
    * 表名
    */
-  protected String             table;
+  @Getter
+  @Setter
+  protected           String             table;
   /**
    * 实体类
    */
-  protected Class<?>           entityClass;
+  @Getter
+  @Setter
+  protected           Class<?>           entityClass;
   /**
    * 字段信息
    */
-  protected List<EntityColumn> columns;
-  //<editor-fold desc="基础方法，必须实现的方法">
-
-  public EntityTable(EntityTable delegate) {
-    super(delegate);
-  }
+  @Setter
+  protected           List<EntityColumn> columns;
+  /**
+   * 初始化完成，可以使用
+   */
+  @Getter
+  @Setter
+  protected           boolean            ready;
+  /**
+   * 使用指定的 &lt;resultMap&gt;
+   */
+  @Getter
+  @Setter
+  protected           String             resultMap;
+  /**
+   * 自动根据字段生成 &lt;resultMap&gt;
+   */
+  @Getter
+  @Setter
+  protected           boolean            autoResultMap;
+  /**
+   * 已初始化自动ResultMap
+   */
+  protected           List<ResultMap>    resultMaps;
 
   /**
-   * 构造方法
-   *
-   * @param table       表名
-   * @param entityClass 类型
+   * 已设置返回值为 resultMap 的方法
    */
-  public EntityTable(String table, Class<?> entityClass) {
-    super(null);
-    this.table = table;
+  protected volatile Map<String, Boolean> setResultMap = new ConcurrentHashMap<>();
+  //<editor-fold desc="基础方法，必须实现的方法">
+
+  protected EntityTable(Class<?> entityClass) {
     this.entityClass = entityClass;
   }
 
-  /**
-   * 表名
-   */
-  public String table() {
-    return delegate != null ? delegate.table() : table;
-  }
-
-  /**
-   * 实体类型
-   */
-  public Class<?> entityClass() {
-    return delegate != null ? delegate.entityClass() : entityClass;
+  public static EntityTable of(Class<?> entityClass) {
+    return new EntityTable(entityClass);
   }
 
   /**
@@ -81,9 +108,6 @@ public class EntityTable extends Delegate<EntityTable> {
    * @return 所有列信息
    */
   public List<EntityColumn> columns() {
-    if (delegate != null) {
-      return delegate.columns();
-    }
     if (this.columns == null) {
       this.columns = new ArrayList<>();
     }
@@ -128,12 +152,34 @@ public class EntityTable extends Delegate<EntityTable> {
       } else {
         columns().add(column);
       }
-      column.setEntityTable(this);
+      column.entityTable(this);
     } else {
       //同名列在父类存在时，说明是子类覆盖的，字段的顺序应该更靠前
       EntityColumn existsColumn = columns().remove(columns().indexOf(column));
       columns().add(0, existsColumn);
     }
+  }
+
+  /**
+   * 第一次初始化，只执行一次
+   *
+   * @return true 第一次，false 相反
+   */
+  protected boolean isFirstInit() {
+    return (resultMap != null || autoResultMap) && resultMaps == null;
+  }
+
+  /**
+   * 是否使用 resultMaps
+   *
+   * @param providerContext 当前方法信息
+   * @param cacheKey        缓存 key，每个方法唯一，默认和 msId 一样
+   * @return true 是，false 否
+   */
+  protected boolean useResultMaps(ProviderContext providerContext, String cacheKey) {
+    return resultMaps != null
+      && providerContext.getMapperMethod().isAnnotationPresent(SelectProvider.class)
+      && (setResultMap != null && !setResultMap.containsKey(cacheKey));
   }
 
   /**
@@ -144,8 +190,105 @@ public class EntityTable extends Delegate<EntityTable> {
    * @param cacheKey        缓存 key，每个方法唯一，默认和 msId 一样
    */
   public void initRuntimeContext(Configuration configuration, ProviderContext providerContext, String cacheKey) {
-    if (delegate != null) {
-      delegate.initRuntimeContext(configuration, providerContext, cacheKey);
+    //初始化一次，后续不会重复初始化
+    if (isFirstInit()) {
+      initResultMap(configuration, providerContext, cacheKey);
+    }
+    if (useResultMaps(providerContext, cacheKey)) {
+      synchronized (cacheKey) {
+        if (!setResultMap.containsKey(cacheKey)) {
+          MetaObject metaObject = SystemMetaObject.forObject(configuration.getMappedStatement(cacheKey));
+          metaObject.setValue("resultMaps", Collections.unmodifiableList(resultMaps));
+          setResultMap.put(cacheKey, true);
+        }
+      }
+    }
+  }
+
+  protected void initResultMap(Configuration configuration, ProviderContext providerContext, String cacheKey) {
+    if (resultMap != null && !resultMap.isEmpty()) {
+      synchronized (this) {
+        if (resultMaps == null) {
+          resultMaps = new ArrayList<>();
+          String resultMapId = generateResultMapId(providerContext, resultMap);
+          if (configuration.hasResultMap(resultMapId)) {
+            resultMaps.add(configuration.getResultMap(resultMapId));
+          } else if (configuration.hasResultMap(resultMap)) {
+            resultMaps.add(configuration.getResultMap(resultMap));
+          } else {
+            throw new RuntimeException(entityClass().getName() + " configured resultMap: " + resultMap + " not found");
+          }
+        }
+      }
+    } else if (autoResultMap) {
+      synchronized (this) {
+        if (resultMaps == null) {
+          resultMaps = new ArrayList<>();
+          resultMaps.add(genResultMap(configuration, providerContext, cacheKey));
+        }
+      }
+    }
+  }
+
+  protected String generateResultMapId(ProviderContext providerContext, String resultMapId) {
+    if (resultMapId.indexOf(".") > 0) {
+      return resultMapId;
+    }
+    return providerContext.getMapperType().getName() + "." + resultMapId;
+  }
+
+  protected ResultMap genResultMap(Configuration configuration, ProviderContext providerContext, String cacheKey) {
+    List<ResultMapping> resultMappings = new ArrayList<>();
+    for (EntityColumn entityColumn : selectColumns()) {
+      String column = entityColumn.column();
+      //去掉可能存在的分隔符，例如：`order`
+      Matcher matcher = DELIMITER.matcher(column);
+      if (matcher.find()) {
+        column = matcher.group(1);
+      }
+      ResultMapping.Builder builder = new ResultMapping.Builder(configuration, entityColumn.property(), column, entityColumn.javaType());
+      if (entityColumn.jdbcType != null && entityColumn.jdbcType != JdbcType.UNDEFINED) {
+        builder.jdbcType(entityColumn.jdbcType);
+      }
+      if (entityColumn.typeHandler != null && entityColumn.typeHandler != UnknownTypeHandler.class) {
+        try {
+          builder.typeHandler(getTypeHandlerInstance(entityColumn.javaType(), entityColumn.typeHandler));
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+      List<ResultFlag> flags = new ArrayList<>();
+      if (entityColumn.id) {
+        flags.add(ResultFlag.ID);
+      }
+      builder.flags(flags);
+      resultMappings.add(builder.build());
+    }
+    String resultMapId = generateResultMapId(providerContext, RESULT_MAP_NAME);
+    ResultMap.Builder builder = new ResultMap.Builder(configuration, resultMapId, entityClass(), resultMappings, true);
+    return builder.build();
+  }
+
+
+  /**
+   * 实例化TypeHandler
+   */
+  public TypeHandler getTypeHandlerInstance(Class<?> javaTypeClass, Class<?> typeHandlerClass) {
+    if (javaTypeClass != null) {
+      try {
+        Constructor<?> c = typeHandlerClass.getConstructor(Class.class);
+        return (TypeHandler) c.newInstance(javaTypeClass);
+      } catch (NoSuchMethodException ignored) {
+        // ignored
+      } catch (Exception e) {
+        throw new TypeException("Failed invoking constructor for handler " + typeHandlerClass, e);
+      }
+    }
+    try {
+      Constructor<?> c = typeHandlerClass.getConstructor();
+      return (TypeHandler) c.newInstance();
+    } catch (Exception e) {
+      throw new TypeException("Unable to find a usable constructor for " + typeHandlerClass, e);
     }
   }
   //</editor-fold>
@@ -156,7 +299,7 @@ public class EntityTable extends Delegate<EntityTable> {
    * 返回主键列，不会为空，当根据主键作为条件时，必须使用当前方法返回的列，没有设置主键时，当前方法返回所有列
    */
   public List<EntityColumn> idColumns() {
-    List<EntityColumn> idColumns = columns().stream().filter(EntityColumn::isId).collect(Collectors.toList());
+    List<EntityColumn> idColumns = columns().stream().filter(EntityColumn::id).collect(Collectors.toList());
     if (idColumns.isEmpty()) {
       return columns();
     }
@@ -167,14 +310,14 @@ public class EntityTable extends Delegate<EntityTable> {
    * 返回普通列，排除主键字段，当根据非主键作为条件时，必须使用当前方法返回的列
    */
   public List<EntityColumn> normalColumns() {
-    return columns().stream().filter(column -> !column.isId()).collect(Collectors.toList());
+    return columns().stream().filter(column -> !column.id()).collect(Collectors.toList());
   }
 
   /**
-   * 返回查询列，默认所有列，当获取查询列时，必须使用当前方法返回的列
+   * 返回查询列，当获取查询列时，必须使用当前方法返回的列
    */
   public List<EntityColumn> selectColumns() {
-    return columns();
+    return columns().stream().filter(EntityColumn::selectable).collect(Collectors.toList());
   }
 
   /**
@@ -185,17 +328,17 @@ public class EntityTable extends Delegate<EntityTable> {
   }
 
   /**
-   * 所有 insert 用到的字段，默认全部字段，当插入列时，必须使用当前方法返回的列
+   * 所有 insert 用到的字段，当插入列时，必须使用当前方法返回的列
    */
   public List<EntityColumn> insertColumns() {
-    return columns();
+    return columns().stream().filter(EntityColumn::insertable).collect(Collectors.toList());
   }
 
   /**
-   * 所有 update 用到的字段，默认全部字段，当更新列时，必须使用当前方法返回的列
+   * 所有 update 用到的字段，当更新列时，必须使用当前方法返回的列
    */
   public List<EntityColumn> updateColumns() {
-    return columns();
+    return columns().stream().filter(EntityColumn::updatable).collect(Collectors.toList());
   }
 
   /**
@@ -213,9 +356,14 @@ public class EntityTable extends Delegate<EntityTable> {
   }
 
   /**
-   * 所有排序用到的字段，默认为空，当使用排序列时，必须使用当前方法返回的列
+   * 所有排序用到的字段
    */
   public Optional<List<EntityColumn>> orderByColumns() {
+    List<EntityColumn> orderByColumns = columns().stream()
+      .filter(c -> c.orderBy != null && !c.orderBy.isEmpty()).collect(Collectors.toList());
+    if (orderByColumns.size() > 0) {
+      return Optional.of(orderByColumns);
+    }
     return Optional.empty();
   }
 
@@ -230,6 +378,10 @@ public class EntityTable extends Delegate<EntityTable> {
    * 所有查询列，形如 column1 AS property1, column2 AS property2, ...
    */
   public String baseColumnAsPropertyList() {
+    //当存在 resultMaps 时，查询列不能用别名
+    if (resultMaps != null) {
+      return baseColumnList();
+    }
     return selectColumns().stream().map(EntityColumn::columnAsProperty).collect(Collectors.joining(","));
   }
 
@@ -248,7 +400,7 @@ public class EntityTable extends Delegate<EntityTable> {
   public Optional<String> groupByColumnList() {
     Optional<List<EntityColumn>> groupByColumns = groupByColumns();
     return groupByColumns.map(entityColumns -> entityColumns.stream().map(EntityColumn::column)
-        .collect(Collectors.joining(",")));
+      .collect(Collectors.joining(",")));
   }
 
   /**
@@ -267,7 +419,7 @@ public class EntityTable extends Delegate<EntityTable> {
   public Optional<String> havingColumnList() {
     Optional<List<EntityColumn>> havingColumns = havingColumns();
     return havingColumns.map(entityColumns -> entityColumns.stream().map(EntityColumn::column)
-        .collect(Collectors.joining(",")));
+      .collect(Collectors.joining(",")));
   }
 
   /**
@@ -285,8 +437,9 @@ public class EntityTable extends Delegate<EntityTable> {
    */
   public Optional<String> orderByColumnList() {
     Optional<List<EntityColumn>> orderByColumns = orderByColumns();
-    return orderByColumns.map(entityColumns -> entityColumns.stream().map(EntityColumn::column)
-        .collect(Collectors.joining(",")));
+    return orderByColumns.map(entityColumns -> entityColumns.stream()
+      .map(column -> column.column() + " " + column.orderBy())
+      .collect(Collectors.joining(",")));
   }
 
   /**

@@ -16,91 +16,98 @@
 
 package io.mybatis.provider;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import org.apache.ibatis.type.JdbcType;
+import org.apache.ibatis.type.TypeHandler;
+import org.apache.ibatis.type.UnknownTypeHandler;
+
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * 实体中字段和列的对应关系接口，记录字段上提供的列信息
  *
  * @author liuzh
  */
-public class EntityColumn extends Delegate<EntityColumn> {
-  /**
-   * 列名
-   */
-  protected String      column;
+@Accessors(fluent = true)
+public class EntityColumn extends EntityProps {
   /**
    * 实体类字段
    */
-  protected EntityField field;
-  /**
-   * 是否为主键
-   */
-  protected boolean     id;
+  @Getter
+  protected final   EntityField                  field;
   /**
    * 所在实体类
    */
-  protected EntityTable entityTable;
-
-  public EntityColumn(EntityColumn delegate) {
-    super(delegate);
-  }
-
-  public EntityColumn(EntityField field, String column, boolean id) {
-    super(null);
-    if (column == null || column.isEmpty()) {
-      throw new NullPointerException("The column name cannot be empty");
-    }
-    if (field == null) {
-      throw new NullPointerException("The column corresponding to the Java field cannot be empty");
-    }
-    this.column = column;
-    this.field = field;
-    this.id = id;
-  }
-
-  //<editor-fold desc="基础方法，这部分方法需要考虑代理形式的用法">
-
-  /**
-   * 是否为主键
-   */
-  public boolean isId() {
-    return delegate != null ? delegate.isId() : id;
-  }
-
+  @Getter
+  @Setter
+  protected       EntityTable                  entityTable;
   /**
    * 列名
    */
-  public String column() {
-    return delegate != null ? delegate.column() : column;
-  }
-
+  @Getter
+  @Setter
+  protected       String                       column;
   /**
-   * Java 字段
+   * 是否为主键
    */
-  public EntityField field() {
-    return delegate != null ? delegate.field() : field;
-  }
-
+  @Getter
+  @Setter
+  protected       boolean                      id;
   /**
-   * 所在实体
+   * 排序方式
    */
-  public EntityTable entityTable() {
-    return delegate != null ? delegate.entityTable() : entityTable;
-  }
-
+  @Getter
+  @Setter
+  protected       String                       orderBy;
   /**
-   * 设置所属实体
+   * 是否查询字段
    */
-  public void setEntityTable(EntityTable entityTable) {
-    if (delegate != null) {
-      this.delegate.setEntityTable(entityTable);
-    } else {
-      this.entityTable = entityTable;
-    }
-  }
-  //</editor-fold>
+  @Getter
+  @Setter
+  protected       boolean                      selectable = true;
+  /**
+   * 是否插入字段
+   */
+  @Getter
+  @Setter
+  protected       boolean                      insertable = true;
+  /**
+   * 是否更新字段
+   */
+  @Getter
+  @Setter
+  protected       boolean                      updatable  = true;
+  /**
+   * jdbc类型
+   */
+  @Getter
+  @Setter
+  protected JdbcType                     jdbcType;
+  /**
+   * 类型处理器
+   */
+  @Getter
+  @Setter
+  protected Class<? extends TypeHandler> typeHandler;
+  /**
+   * 精度
+   */
+  @Getter
+  @Setter
+  protected String                       numericScale;
 
   //<editor-fold desc="根据上面基础方法就能直接实现的默认方法">
+
+  protected EntityColumn(EntityField field) {
+    this.field = field;
+  }
+
+  public static EntityColumn of(EntityField field) {
+    return new EntityColumn(field);
+  }
 
   /**
    * Java 类型
@@ -138,7 +145,40 @@ public class EntityColumn extends Delegate<EntityColumn> {
    * @param prefix 指定前缀，需要自己提供"."
    */
   public String variables(String prefix) {
-    return "#{" + property(prefix) + "}";
+    return "#{" + property(prefix)
+      + jdbcTypeVariables().orElse("")
+      + typeHandlerVariables().orElse("")
+      + numericScaleVariables().orElse("") + "}";
+  }
+
+  /**
+   * 数据库类型 {, jdbcType=VARCHAR}
+   */
+  public Optional<String> jdbcTypeVariables() {
+    if (this.jdbcType != null && this.jdbcType != JdbcType.UNDEFINED) {
+      return Optional.of(", jdbcType=" + jdbcType);
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * 类型处理器 {, typeHandler=XXTypeHandler}
+   */
+  public Optional<String> typeHandlerVariables() {
+    if (this.typeHandler != null && this.typeHandler != UnknownTypeHandler.class) {
+      return Optional.of(", typeHandler=" + typeHandler.getName());
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * 小数位数 {, numericScale=2}
+   */
+  public Optional<String> numericScaleVariables() {
+    if (this.numericScale != null && !this.numericScale.isEmpty()) {
+      return Optional.of(", numericScale=" + numericScale);
+    }
+    return Optional.empty();
   }
 
   /**

@@ -16,14 +16,10 @@
 
 package io.mybatis.provider.defaults;
 
-import io.mybatis.provider.EntityColumn;
-import io.mybatis.provider.EntityFactory;
-import io.mybatis.provider.EntityField;
 import io.mybatis.provider.EntityTable;
+import io.mybatis.provider.EntityTableFactory;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -31,40 +27,26 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author liuzh
  */
-public class CachingEntityFactory extends EntityFactory {
+public class CachingEntityTableFactory implements EntityTableFactory {
   /**
    * 缓存实体类信息
    */
   private final Map<Class<?>, EntityTable> ENTITY_CLASS_MAP = new ConcurrentHashMap<>();
 
-  public CachingEntityFactory(EntityFactory factory) {
-    setNext(factory);
-  }
-
   @Override
-  public void assembleEntityColumns(EntityTable entityTable) {
-    Class<?> entityClass = entityTable.entityClass();
+  public EntityTable createEntityTable(Class<?> entityClass, Chain chain) {
     if (ENTITY_CLASS_MAP.get(entityClass) == null) {
       synchronized (entityClass) {
         if (ENTITY_CLASS_MAP.get(entityClass) == null) {
-          next().assembleEntityColumns(entityTable);
-          ENTITY_CLASS_MAP.put(entityClass, entityTable);
+          ENTITY_CLASS_MAP.put(entityClass, chain.createEntityTable(entityClass));
         }
       }
-    }
-  }
-
-  @Override
-  public EntityTable createEntityTable(Class<?> entityClass) {
-    if (ENTITY_CLASS_MAP.get(entityClass) == null) {
-      return next().createEntityTable(entityClass);
     }
     return ENTITY_CLASS_MAP.get(entityClass);
   }
 
   @Override
-  public Optional<List<EntityColumn>> createEntityColumn(EntityField field) {
-    return next().createEntityColumn(field);
+  public int getOrder() {
+    return Integer.MAX_VALUE;
   }
-
 }
