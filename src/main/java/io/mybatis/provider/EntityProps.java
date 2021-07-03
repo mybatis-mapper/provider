@@ -7,7 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Accessors(fluent = true)
-public class EntityProps {
+public class EntityProps<T extends EntityProps> {
 
   /**
    * 附加属性，用于扩展
@@ -21,8 +21,8 @@ public class EntityProps {
    * @param prop
    * @return
    */
-  public Object getProp(String prop) {
-    return props != null ? props.get(prop) : null;
+  public <V> V prop(String prop) {
+    return props != null ? (V) props.get(prop) : null;
   }
 
   /**
@@ -31,10 +31,11 @@ public class EntityProps {
    * @param prop
    * @param value
    */
-  public void putProp(String prop, Object value) {
+  public T prop(String prop, Object value) {
     if (props == null) {
       props = new LinkedHashMap<>();
     }
     props.put(prop, value);
+    return (T) this;
   }
 }

@@ -17,7 +17,6 @@
 package io.mybatis.provider;
 
 import org.apache.ibatis.builder.annotation.ProviderContext;
-import org.apache.ibatis.mapping.SqlSource;
 
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -31,19 +30,15 @@ public class SqlCache {
   /**
    * 执行方法上下文
    */
-  private final    ProviderContext  providerContext;
+  private final ProviderContext  providerContext;
   /**
    * 实体类信息
    */
-  private final    EntityTable      entity;
+  private final EntityTable      entity;
   /**
    * sql 提供者
    */
-  private final    Supplier<String> sqlScriptSupplier;
-  /**
-   * 生成的 MyBatis SqlSource，缓存该对象，避免重复解析上面的 sql 脚本生成
-   */
-  private volatile SqlSource        sqlSource;
+  private final Supplier<String> sqlScriptSupplier;
 
   SqlCache(ProviderContext providerContext, EntityTable entity, Supplier<String> sqlScriptSupplier) {
     Objects.requireNonNull(providerContext);
@@ -73,22 +68,6 @@ public class SqlCache {
    */
   public EntityTable getEntity() {
     return entity;
-  }
-
-  /**
-   * @return sql数据源
-   */
-  SqlSource getSqlSource() {
-    return sqlSource;
-  }
-
-  /**
-   * 设置 sql数据源
-   *
-   * @param sqlSource sql数据源
-   */
-  void setSqlSource(SqlSource sqlSource) {
-    this.sqlSource = sqlSource;
   }
 
 }

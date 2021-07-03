@@ -35,9 +35,8 @@ public class DefaultEntityTableFactory implements EntityTableFactory {
         .table(table.value().isEmpty() ? entityClass.getSimpleName() : table.value())
         .resultMap(table.resultMap())
         .autoResultMap(table.autoResultMap());
-    } else {
-      return EntityTable.of(entityClass).table(entityClass.getSimpleName());
     }
+    return null;
   }
 
 }

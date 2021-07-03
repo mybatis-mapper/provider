@@ -21,6 +21,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.apache.ibatis.annotations.SelectProvider;
 import org.apache.ibatis.builder.annotation.ProviderContext;
+import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.ResultFlag;
 import org.apache.ibatis.mapping.ResultMap;
 import org.apache.ibatis.mapping.ResultMapping;
@@ -34,7 +35,6 @@ import org.apache.ibatis.type.UnknownTypeHandler;
 
 import java.lang.reflect.Constructor;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -45,9 +45,9 @@ import java.util.stream.Collectors;
  * @author liuzh
  */
 @Accessors(fluent = true)
-public class EntityTable extends EntityProps {
-  public static final Pattern            DELIMITER       = Pattern.compile("^[`\\[\"]?(.*?)[`\\]\"]?$");
-  public static final String             RESULT_MAP_NAME = "BaseProviderResultMap";
+public class EntityTable extends EntityProps<EntityTable> {
+  public static final Pattern            DELIMITER         = Pattern.compile("^[`\\[\"]?(.*?)[`\\]\"]?$");
+  public static final String             RESULT_MAP_NAME   = "BaseProviderResultMap";
   /**
    * 表名
    */
@@ -87,11 +87,10 @@ public class EntityTable extends EntityProps {
    * 已初始化自动ResultMap
    */
   protected           List<ResultMap>    resultMaps;
-
   /**
-   * 已设置返回值为 resultMap 的方法
+   * 已经初始化的配置
    */
-  protected volatile Map<String, Boolean> setResultMap = new ConcurrentHashMap<>();
+  protected           Set<Configuration> initConfiguration = new HashSet<>();
   //<editor-fold desc="基础方法，必须实现的方法">
 
   protected EntityTable(Class<?> entityClass) {
@@ -161,15 +160,6 @@ public class EntityTable extends EntityProps {
   }
 
   /**
-   * 第一次初始化，只执行一次
-   *
-   * @return true 第一次，false 相反
-   */
-  protected boolean isFirstInit() {
-    return (resultMap != null || autoResultMap) && resultMaps == null;
-  }
-
-  /**
    * 是否使用 resultMaps
    *
    * @param providerContext 当前方法信息
@@ -178,34 +168,49 @@ public class EntityTable extends EntityProps {
    */
   protected boolean useResultMaps(ProviderContext providerContext, String cacheKey) {
     return resultMaps != null
-      && providerContext.getMapperMethod().isAnnotationPresent(SelectProvider.class)
-      && (setResultMap != null && !setResultMap.containsKey(cacheKey));
+      && providerContext.getMapperMethod().isAnnotationPresent(SelectProvider.class);
+  }
+
+  /**
+   * 是否已经替换 resultMap
+   *
+   * @param configuration MyBatis 配置类，慎重操作
+   * @param cacheKey      缓存 key，每个方法唯一，默认和 msId 一样
+   * @return
+   */
+  protected boolean hasBeenReplaced(Configuration configuration, String cacheKey) {
+    MappedStatement mappedStatement = configuration.getMappedStatement(cacheKey);
+    if (mappedStatement.getResultMaps() != null && mappedStatement.getResultMaps().size() > 0) {
+      return mappedStatement.getResultMaps().get(0) == resultMaps.get(0);
+    }
+    return false;
   }
 
   /**
    * 设置运行时信息，不同方法分别执行一次，需要保证幂等
    *
-   * @param configuration   MyBatis 配置类，慎重操作
+   * @param configuration   MyBatis 配置类，慎重操作，多数据源或多个配置时，需要区分 Configuration 执行
    * @param providerContext 当前方法信息
    * @param cacheKey        缓存 key，每个方法唯一，默认和 msId 一样
    */
   public void initRuntimeContext(Configuration configuration, ProviderContext providerContext, String cacheKey) {
     //初始化一次，后续不会重复初始化
-    if (isFirstInit()) {
+    if (!initConfiguration.contains(configuration)) {
       initResultMap(configuration, providerContext, cacheKey);
+      initConfiguration.add(configuration);
     }
     if (useResultMaps(providerContext, cacheKey)) {
       synchronized (cacheKey) {
-        if (!setResultMap.containsKey(cacheKey)) {
+        if (!hasBeenReplaced(configuration, cacheKey)) {
           MetaObject metaObject = SystemMetaObject.forObject(configuration.getMappedStatement(cacheKey));
           metaObject.setValue("resultMaps", Collections.unmodifiableList(resultMaps));
-          setResultMap.put(cacheKey, true);
         }
       }
     }
   }
 
   protected void initResultMap(Configuration configuration, ProviderContext providerContext, String cacheKey) {
+    //使用指定的 resultMap
     if (resultMap != null && !resultMap.isEmpty()) {
       synchronized (this) {
         if (resultMaps == null) {
@@ -220,11 +225,15 @@ public class EntityTable extends EntityProps {
           }
         }
       }
-    } else if (autoResultMap) {
+    }
+    //自动生成 resultMap
+    else if (autoResultMap) {
       synchronized (this) {
         if (resultMaps == null) {
           resultMaps = new ArrayList<>();
-          resultMaps.add(genResultMap(configuration, providerContext, cacheKey));
+          ResultMap resultMap = genResultMap(configuration, providerContext, cacheKey);
+          resultMaps.add(resultMap);
+          configuration.addResultMap(resultMap);
         }
       }
     }

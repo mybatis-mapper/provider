@@ -178,7 +178,7 @@ public interface SqlScript {
    */
   default String trim(String prefix, String suffix, String prefixOverrides, String suffixOverrides, LRSupplier content) {
     return String.format("\n<trim prefix=\"%s\" prefixOverrides=\"%s\" suffixOverrides=\"%s\" suffix=\"%s\">%s\n</trim> "
-        , prefix, prefixOverrides, suffixOverrides, suffix, content.getWithLR());
+      , prefix, prefixOverrides, suffixOverrides, suffix, content.getWithLR());
   }
 
   /**
@@ -230,7 +230,7 @@ public interface SqlScript {
    */
   default String foreach(String collection, String item, String separator, LRSupplier content) {
     return String.format("\n<foreach collection=\"%s\" item=\"%s\" separator=\"%s\">%s\n</foreach> "
-        , collection, item, separator, content.getWithLR());
+      , collection, item, separator, content.getWithLR());
   }
 
   /**
@@ -246,7 +246,7 @@ public interface SqlScript {
    */
   default String foreach(String collection, String item, String separator, String open, String close, LRSupplier content) {
     return String.format("\n<foreach collection=\"%s\" item=\"%s\" open=\"%s\" close=\"%s\" separator=\"%s\">%s\n</foreach> "
-        , collection, item, open, close, separator, content.getWithLR());
+      , collection, item, open, close, separator, content.getWithLR());
   }
 
   /**
@@ -263,7 +263,7 @@ public interface SqlScript {
    */
   default String foreach(String collection, String item, String separator, String open, String close, String index, LRSupplier content) {
     return String.format("\n<foreach collection=\"%s\" item=\"%s\" index=\"%s\" open=\"%s\" close=\"%s\" separator=\"%s\">%s\n</foreach> "
-        , collection, item, index, open, close, separator, content.getWithLR());
+      , collection, item, index, open, close, separator, content.getWithLR());
   }
 
   /**

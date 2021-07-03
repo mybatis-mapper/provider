@@ -38,7 +38,12 @@ public class CachingEntityTableFactory implements EntityTableFactory {
     if (ENTITY_CLASS_MAP.get(entityClass) == null) {
       synchronized (entityClass) {
         if (ENTITY_CLASS_MAP.get(entityClass) == null) {
-          ENTITY_CLASS_MAP.put(entityClass, chain.createEntityTable(entityClass));
+          EntityTable entityTable = chain.createEntityTable(entityClass);
+          if (entityTable != null) {
+            ENTITY_CLASS_MAP.put(entityClass, entityTable);
+          } else {
+            return null;
+          }
         }
       }
     }

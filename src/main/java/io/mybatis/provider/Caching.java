@@ -25,6 +25,7 @@ import org.apache.ibatis.scripting.xmltags.XMLLanguageDriver;
 import org.apache.ibatis.session.Configuration;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -40,7 +41,11 @@ public class Caching extends XMLLanguageDriver {
   /**
    * 缓存方法对应的 SqlCache
    */
-  private static final Map<String, SqlCache> CACHE_SQL = new ConcurrentHashMap<>(16);
+  private static final Map<String, SqlCache>                      CACHE_SQL                   = new ConcurrentHashMap<>(16);
+  /**
+   * 多数据源，多配置的情况下（甚至单元测试时），同一个方法会在不同的 Configuration 中出现，如果不做处理就会出现不一致
+   */
+  private static final Map<Configuration, Map<String, SqlSource>> CONFIGURATION_CACHE_KEY_MAP = new ConcurrentHashMap<>(1);
 
   /**
    * 根据接口和方法生成缓存 key
@@ -69,7 +74,7 @@ public class Caching extends XMLLanguageDriver {
   }
 
   /**
-   * 缓存 sqlScript 对应的 SqlSource
+   * 缓存 sqlScript 对应的 SQL 和配置
    *
    * @param providerContext   执行方法上下文
    * @param entity            实体类信息
@@ -100,22 +105,24 @@ public class Caching extends XMLLanguageDriver {
       //取出缓存的信息
       SqlCache cache = CACHE_SQL.get(cacheKey);
       //判断是否已经解析过
-      if (cache.getSqlSource() == null) {
+      if (!(CONFIGURATION_CACHE_KEY_MAP.containsKey(configuration) && CONFIGURATION_CACHE_KEY_MAP.get(configuration).containsKey(cacheKey))) {
         synchronized (cacheKey) {
-          if (cache.getSqlSource() == null) {
+          if (!(CONFIGURATION_CACHE_KEY_MAP.containsKey(configuration) && CONFIGURATION_CACHE_KEY_MAP.get(configuration).containsKey(cacheKey))) {
             //初始化 EntityTable，每个方法执行一次，可以利用 configuration 进行一些特殊操作
             cache.getEntity().initRuntimeContext(configuration, cache.getProviderContext(), cacheKey);
+            Map<String, SqlSource> cachekeyMap = CONFIGURATION_CACHE_KEY_MAP.computeIfAbsent(configuration, k -> new HashMap<>());
             //下面的方法才会真正生成最终的 XML SQL，生成的时候可以用到上面的 configuration 和 ProviderContext 参数
             String sqlScript = cache.getSqlScript();
             if (log.isTraceEnabled()) {
               log.trace("cacheKey - " + cacheKey + " :\n" + sqlScript + "\n");
             }
             //缓存 sqlSource
-            cache.setSqlSource(super.createSqlSource(configuration, sqlScript, parameterType));
+            SqlSource sqlSource = super.createSqlSource(configuration, sqlScript, parameterType);
+            cachekeyMap.put(cacheKey, sqlSource);
           }
         }
       }
-      return cache.getSqlSource();
+      return CONFIGURATION_CACHE_KEY_MAP.get(configuration).get(cacheKey);
     } else {
       return super.createSqlSource(configuration, script, parameterType);
     }

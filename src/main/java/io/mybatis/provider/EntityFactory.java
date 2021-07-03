@@ -21,6 +21,7 @@ import io.mybatis.provider.defaults.DefaultEntityTableFactoryChain;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Optional;
 
@@ -76,9 +77,13 @@ public abstract class EntityFactory {
         reverse(declaredFields);
       }
       for (Field field : declaredFields) {
-        EntityField entityField = new EntityField(entityClass, field);
-        Optional<List<EntityColumn>> optionalEntityColumns = entityColumnFactoryChain.createEntityColumn(entityTable, entityField);
-        optionalEntityColumns.ifPresent(columns -> columns.forEach(entityTable::addColumn));
+        int modifiers = field.getModifiers();
+        //排除 static 和 transient 修饰的字段
+        if (!Modifier.isStatic(modifiers) && !Modifier.isTransient(modifiers)) {
+          EntityField entityField = new EntityField(entityClass, field);
+          Optional<List<EntityColumn>> optionalEntityColumns = entityColumnFactoryChain.createEntityColumn(entityTable, entityField);
+          optionalEntityColumns.ifPresent(columns -> columns.forEach(entityTable::addColumn));
+        }
       }
       //迭代获取父类
       declaredClass = declaredClass.getSuperclass();

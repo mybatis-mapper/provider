@@ -55,7 +55,7 @@ public class UserMoreTest {
   protected EntityColumn column(String fieldName) {
     Optional<EntityColumn> optionalEntityColumn = entityTable.columns().stream()
         .filter(c -> c.property().equals(fieldName)).findFirst();
-    return (EntityColumn) optionalEntityColumn.orElseThrow(() -> new RuntimeException(fieldName + " 不存在"));
+    return optionalEntityColumn.orElseThrow(() -> new RuntimeException(fieldName + " 不存在"));
   }
 
   @Test

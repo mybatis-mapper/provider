@@ -32,12 +32,12 @@ import java.util.Optional;
  * @author liuzh
  */
 @Accessors(fluent = true)
-public class EntityColumn extends EntityProps {
+public class EntityColumn extends EntityProps<EntityColumn> {
   /**
    * 实体类字段
    */
   @Getter
-  protected final   EntityField                  field;
+  protected final EntityField                  field;
   /**
    * 所在实体类
    */
@@ -85,19 +85,19 @@ public class EntityColumn extends EntityProps {
    */
   @Getter
   @Setter
-  protected JdbcType                     jdbcType;
+  protected       JdbcType                     jdbcType;
   /**
    * 类型处理器
    */
   @Getter
   @Setter
-  protected Class<? extends TypeHandler> typeHandler;
+  protected       Class<? extends TypeHandler> typeHandler;
   /**
    * 精度
    */
   @Getter
   @Setter
-  protected String                       numericScale;
+  protected       String                       numericScale;
 
   //<editor-fold desc="根据上面基础方法就能直接实现的默认方法">
 
