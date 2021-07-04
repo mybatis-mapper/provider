@@ -64,20 +64,24 @@ public class User {
 提供了 `SqlScript` 类用于拼接 XML 形式的 SQL，简单示例如下：
 
 ```java
-/**
- * 根据主键删除
- *
- * @param providerContext 上下文
- * @return cacheKey
- */
-public static String deleteByPrimaryKey(ProviderContext providerContext){
-  return SqlScript.caching(providerContext,entity->"DELETE FROM "+entity.table()
-  +" WHERE "+entity.idColumns().stream().map(EntityColumn::columnEqualsProperty).collect(Collectors.joining(" AND ")));
+class DemoProvider {
+  /**
+   * 根据主键删除
+   *
+   * @param providerContext 上下文
+   * @return cacheKey
+   */
+  public static String deleteByPrimaryKey(ProviderContext providerContext) {
+    return SqlScript.caching(providerContext, entity -> "DELETE FROM " + entity.table()
+      + " WHERE " + entity.idColumns().stream().map(EntityColumn::columnEqualsProperty).collect(Collectors.joining(" AND ")));
   }
+}
 ```
 
-`SqlScript.caching` 会缓存拼接 SQL 的 lambda 方法，并且返回方法的 id，**特别注意，这里返回的不是 sql，而且缓存 SQL 后的 key**，
-key值形式如：`io.mybatis.mapper.UserMapper.deleteByPrimaryKey`。
+`SqlScript.caching` 会缓存拼接 SQL 的 lambda 方法，并且返回方法的 id。
+
+> **特别注意，这里返回的不是 sql，而且缓存 SQL 后的 key**  
+> key值形式如：`io.mybatis.mapper.UserMapper.deleteByPrimaryKey`。
 
 上面方法在执行时，最终拼接的 SQL 示例如下：
 
@@ -91,28 +95,29 @@ key值形式如：`io.mybatis.mapper.UserMapper.deleteByPrimaryKey`。
 复杂一点的：
 
 ```java
-/**
- * 根据主键查询实体
- *
- * @param providerContext 上下文
- * @return cacheKey
- */
-public static String selectByPrimaryKey(ProviderContext providerContext){
-  return SqlScript.caching(providerContext,new SqlScript(){
-@Override
-public String getSql(EntityTable entity){
-  return"SELECT "+entity.baseColumnAsPropertyList()
-  +" FROM "+entity.table()
-  +where(()->entity.idColumns().stream().map(EntityColumn::columnEqualsProperty).collect(Collectors.joining(" AND ")));
+class DemoProvider {
+  /**
+   * 根据主键查询实体
+   *
+   * @param providerContext 上下文
+   * @return cacheKey
+   */
+  public static String selectByPrimaryKey(ProviderContext providerContext) {
+    return SqlScript.caching(providerContext, new SqlScript() {
+      @Override
+      public String getSql(EntityTable entity) {
+        return "SELECT " + entity.baseColumnAsPropertyList()
+          + " FROM " + entity.table()
+          + where(() -> entity.idColumns().stream().map(EntityColumn::columnEqualsProperty).collect(Collectors.joining(" AND ")));
+      }
+    });
   }
-  });
-  }
+}
 ```
 
 上面方法在执行时，最终拼接的 SQL 示例如下：
 
 ```xml
-
 <script>
   SELECT id,name AS userName,sex FROM user
   <where>
@@ -124,34 +129,35 @@ public String getSql(EntityTable entity){
 更复杂的：
 
 ```java
-/**
- * 保存实体中不为空的字段
- *
- * @param providerContext 上下文
- * @return cacheKey
- */
-public static String insertSelective(ProviderContext providerContext){
-  return SqlScript.caching(providerContext,new SqlScript(){
-@Override
-public String getSql(EntityTable entity){
-  return"INSERT INTO "+entity.table()
-  +trimSuffixOverrides("(",")",",",()->
-  entity.insertColumns().stream().map(column->
-  ifTest(column.notNullTest(),()->column.column()+",")
-  ).collect(Collectors.joining(LF)))
-  +trimSuffixOverrides(" VALUES (",")",",",()->
-  entity.insertColumns().stream().map(column->
-  ifTest(column.notNullTest(),()->column.variables()+",")
-  ).collect(Collectors.joining(LF)));
+class DemoProvider {
+  /**
+   * 保存实体中不为空的字段
+   *
+   * @param providerContext 上下文
+   * @return cacheKey
+   */
+  public static String insertSelective(ProviderContext providerContext) {
+    return SqlScript.caching(providerContext, new SqlScript() {
+      @Override
+      public String getSql(EntityTable entity) {
+        return "INSERT INTO " + entity.table()
+          + trimSuffixOverrides("(", ")", ",", () ->
+          entity.insertColumns().stream().map(column ->
+            ifTest(column.notNullTest(), () -> column.column() + ",")
+          ).collect(Collectors.joining(LF)))
+          + trimSuffixOverrides(" VALUES (", ")", ",", () ->
+          entity.insertColumns().stream().map(column ->
+            ifTest(column.notNullTest(), () -> column.variables() + ",")
+          ).collect(Collectors.joining(LF)));
+      }
+    });
   }
-  });
-  }
+}
 ```
 
 上面方法在执行时，最终拼接的 SQL 示例如下：
 
 ```xml
-
 <script>
   INSERT INTO user
   <trim prefix="(" suffixOverrides="," suffix=")">
@@ -205,3 +211,23 @@ public String getSql(EntityTable entity){
 
 更复杂的还有一个兼容 **tk-mapper** 的项目：**mybatis-mapper/tk-mapper**( [gitee](https://gitee.com/mybatis-mapper/tk-mapper)
 | [GitHub](https://github.com/mybatis-mapper/tk-mapper) ) 的实现。
+
+## Caching - LanguageDriver
+
+这是整个通用机制的核心，`Caching` 实现了 `LanguageDriver` 接口， 允许 Provider 方法的实现返回缓存后的方法 key， 在真正执行的时候，再从缓存中找到 SQL 真正执行。
+
+为了让 `Caching` 生效，需要在接口方法添加 `@Lang(Caching.class)` 注解，例如：
+
+```java
+class DemoMapper<T> {
+  /**
+   * 根据主键查询实体
+   *
+   * @param id 主键
+   * @return 实体
+   */
+  @Lang(Caching.class)
+  @SelectProvider(type = EntityProvider.class, method = "selectByPrimaryKey")
+  Optional<T> selectByPrimaryKey(I id);
+}
+```
