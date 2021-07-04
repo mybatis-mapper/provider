@@ -17,6 +17,7 @@
 package io.mybatis.provider.util;
 
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * 工具类，主要判断空和非空
@@ -147,6 +148,30 @@ public class Utils {
    */
   public static <T> boolean isNotEmpty(Collection<T> collection) {
     return !isEmpty(collection);
+  }
+
+  /**
+   * Map 是否为空
+   *
+   * @param map
+   * @param <K>
+   * @param <V>
+   * @return
+   */
+  public static <K, V> boolean isEmpty(Map<K, V> map) {
+    return map == null || map.isEmpty();
+  }
+
+  /**
+   * Map 是否非空
+   *
+   * @param map
+   * @param <K>
+   * @param <V>
+   * @return
+   */
+  public static <K, V> boolean isNotEmpty(Map<K, V> map) {
+    return !isEmpty(map);
   }
 
 }

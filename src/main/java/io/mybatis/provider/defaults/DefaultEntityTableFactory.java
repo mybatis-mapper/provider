@@ -31,10 +31,14 @@ public class DefaultEntityTableFactory implements EntityTableFactory {
   public EntityTable createEntityTable(Class<?> entityClass, Chain chain) {
     if (entityClass.isAnnotationPresent(Entity.Table.class)) {
       Entity.Table table = entityClass.getAnnotation(Entity.Table.class);
-      return EntityTable.of(entityClass)
+      EntityTable entityTable = EntityTable.of(entityClass)
         .table(table.value().isEmpty() ? entityClass.getSimpleName() : table.value())
         .resultMap(table.resultMap())
         .autoResultMap(table.autoResultMap());
+      for (Entity.Prop prop : table.props()) {
+        entityTable.setProp(prop);
+      }
+      return entityTable;
     }
     return null;
   }

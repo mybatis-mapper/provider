@@ -126,32 +126,55 @@ public interface SqlScript {
   }
 
   /**
-   * 增加对参数的校验，参数不能为空，为空则抛出异常
+   * 增加对参数的校验，参数不能为空
    *
    * @param message 提示信息
    * @return 在代码基础上增加一段校验
    */
   default String parameterNotNull(String message) {
-    return parameterNotNull("_parameter", message);
+    return variableNotNull("_parameter", message);
   }
 
   /**
-   * 增加对参数的校验，参数不能为空，为空则抛出异常
+   * 增加对参数的校验，参数必须为 true
    *
-   * @param message 提示信息
+   * @param variable 参数, 值为 boolean
+   * @param message  提示信息
    * @return 在代码基础上增加一段校验
    */
-  default String parameterNotNull(String variable, String message) {
+  default String variableIsTrue(String variable, String message) {
+    return "\n${@io.mybatis.provider.util.Assert@isTrue(" + variable + ", '" + message + "')}\n";
+  }
+
+  /**
+   * 增加对参数的校验，参数必须为 false
+   *
+   * @param variable 参数, 值为 boolean
+   * @param message  提示信息
+   * @return 在代码基础上增加一段校验
+   */
+  default String variableIsFalse(String variable, String message) {
+    return "\n${@io.mybatis.provider.util.Assert@isFalse(" + variable + ", '" + message + "')}\n";
+  }
+
+  /**
+   * 增加对参数的校验，参数不能为 null
+   *
+   * @param variable 参数
+   * @param message  提示信息
+   * @return 在代码基础上增加一段校验
+   */
+  default String variableNotNull(String variable, String message) {
     return "\n${@io.mybatis.provider.util.Assert@notNull(" + variable + ", '" + message + "')}\n";
   }
 
   /**
-   * 增加对参数的校验，参数不能为空，为空则抛出异常
+   * 增加对参数的校验，参数不能为空
    *
    * @param message 提示信息
    * @return 在代码基础上增加一段校验
    */
-  default String parameterNotEmpty(String variable, String message) {
+  default String variableNotEmpty(String variable, String message) {
     return "\n${@io.mybatis.provider.util.Assert@notEmpty(" + variable + ", '" + message + "')}\n";
   }
 

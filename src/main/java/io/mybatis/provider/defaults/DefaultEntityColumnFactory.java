@@ -47,6 +47,9 @@ public class DefaultEntityColumnFactory implements EntityColumnFactory {
         .jdbcType(column.jdbcType())
         .typeHandler(column.typeHandler())
         .numericScale(column.numericScale());
+      for (Entity.Prop prop : column.props()) {
+        entityColumn.setProp(prop);
+      }
       return Optional.of(Arrays.asList(entityColumn));
     }
     return Optional.empty();

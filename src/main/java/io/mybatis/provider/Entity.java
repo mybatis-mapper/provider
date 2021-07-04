@@ -63,6 +63,31 @@ public @interface Entity {
      * 自动根据字段生成 <resultMap>
      */
     boolean autoResultMap() default false;
+
+    /**
+     * 属性配置
+     */
+    Prop[] props() default {};
+  }
+
+  /**
+   * 属性配置
+   */
+  @interface Prop {
+    /**
+     * 属性名
+     */
+    String name();
+
+    /**
+     * 属性值
+     */
+    String value();
+
+    /**
+     * 属性值类型，支持 String, Integer, Long, Boolean, Double, Float 六种类型
+     */
+    Class type() default String.class;
   }
 
   /**
@@ -120,5 +145,10 @@ public @interface Entity {
      * 小数位数 {, numericScale=2}
      */
     String numericScale() default "";
+
+    /**
+     * 属性配置
+     */
+    Prop[] props() default {};
   }
 }
