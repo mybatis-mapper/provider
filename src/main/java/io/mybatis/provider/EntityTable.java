@@ -16,6 +16,7 @@
 
 package io.mybatis.provider;
 
+import io.mybatis.provider.util.Utils;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -211,7 +212,7 @@ public class EntityTable extends EntityProps<EntityTable> {
 
   protected void initResultMap(Configuration configuration, ProviderContext providerContext, String cacheKey) {
     //使用指定的 resultMap
-    if (resultMap != null && !resultMap.isEmpty()) {
+    if (Utils.isNotEmpty(resultMap)) {
       synchronized (this) {
         if (resultMaps == null) {
           resultMaps = new ArrayList<>();
@@ -369,7 +370,7 @@ public class EntityTable extends EntityProps<EntityTable> {
    */
   public Optional<List<EntityColumn>> orderByColumns() {
     List<EntityColumn> orderByColumns = columns().stream()
-      .filter(c -> c.orderBy != null && !c.orderBy.isEmpty()).collect(Collectors.toList());
+      .filter(c -> Utils.isNotEmpty(c.orderBy)).collect(Collectors.toList());
     if (orderByColumns.size() > 0) {
       return Optional.of(orderByColumns);
     }

@@ -142,7 +142,7 @@ public interface SqlScript {
    * @return 在代码基础上增加一段校验
    */
   default String parameterNotNull(String variable, String message) {
-    return "\n${@io.mybatis.common.util.Assert@notNull(" + variable + ", '" + message + "')}\n";
+    return "\n${@io.mybatis.provider.util.Assert@notNull(" + variable + ", '" + message + "')}\n";
   }
 
   /**
@@ -152,7 +152,7 @@ public interface SqlScript {
    * @return 在代码基础上增加一段校验
    */
   default String parameterNotEmpty(String variable, String message) {
-    return "\n${@io.mybatis.common.util.Assert@notEmpty(" + variable + ", '" + message + "')}\n";
+    return "\n${@io.mybatis.provider.util.Assert@notEmpty(" + variable + ", '" + message + "')}\n";
   }
 
   /**

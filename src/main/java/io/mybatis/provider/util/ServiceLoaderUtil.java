@@ -1,4 +1,6 @@
-package io.mybatis.provider;
+package io.mybatis.provider.util;
+
+import io.mybatis.provider.Order;
 
 import java.util.ArrayList;
 import java.util.Comparator;

@@ -16,6 +16,7 @@
 
 package io.mybatis.provider;
 
+import io.mybatis.provider.util.Utils;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -175,7 +176,7 @@ public class EntityColumn extends EntityProps<EntityColumn> {
    * 小数位数 {, numericScale=2}
    */
   public Optional<String> numericScaleVariables() {
-    if (this.numericScale != null && !this.numericScale.isEmpty()) {
+    if (Utils.isNotEmpty(this.numericScale)) {
       return Optional.of(", numericScale=" + numericScale);
     }
     return Optional.empty();

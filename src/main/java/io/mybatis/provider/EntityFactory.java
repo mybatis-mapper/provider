@@ -18,6 +18,7 @@ package io.mybatis.provider;
 
 import io.mybatis.provider.defaults.DefaultEntityColumnFactoryChain;
 import io.mybatis.provider.defaults.DefaultEntityTableFactoryChain;
+import io.mybatis.provider.util.ServiceLoaderUtil;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -60,7 +61,7 @@ public abstract class EntityFactory {
     //创建 EntityTable，不处理列（字段），此时返回的 EntityTable 已经经过了所有处理链的加工
     EntityTable entityTable = entityTableFactoryChain.createEntityTable(entityClass);
     if (entityTable == null) {
-      throw new NullPointerException("无法获取 " + entityClass.getName() + " 对应的实体类信息");
+      throw new NullPointerException("Unable to get " + entityClass.getName() + " entity class information");
     }
     //如果实体表已经处理好，直接返回
     if (entityTable.ready()) {

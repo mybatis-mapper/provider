@@ -16,6 +16,8 @@
 
 package io.mybatis.provider;
 
+import io.mybatis.provider.util.ServiceLoaderUtil;
+
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Objects;
