@@ -11,19 +11,19 @@ import java.util.List;
  * @author liuzh
  */
 public class DefaultEntityTableFactoryChain implements EntityTableFactory.Chain {
-  private final List<EntityTableFactory>       entityTableFactories;
+  private final List<EntityTableFactory>       factories;
   private final DefaultEntityTableFactoryChain next;
   private final int                            index;
 
-  public DefaultEntityTableFactoryChain(List<EntityTableFactory> entityTableFactories) {
-    this(entityTableFactories, 0);
+  public DefaultEntityTableFactoryChain(List<EntityTableFactory> factories) {
+    this(factories, 0);
   }
 
-  private DefaultEntityTableFactoryChain(List<EntityTableFactory> entityTableFactories, int index) {
-    this.entityTableFactories = entityTableFactories;
+  private DefaultEntityTableFactoryChain(List<EntityTableFactory> factories, int index) {
+    this.factories = factories;
     this.index = index;
-    if (this.index < this.entityTableFactories.size()) {
-      this.next = new DefaultEntityTableFactoryChain(entityTableFactories, this.index + 1);
+    if (this.index < this.factories.size()) {
+      this.next = new DefaultEntityTableFactoryChain(factories, this.index + 1);
     } else {
       this.next = null;
     }
@@ -31,8 +31,8 @@ public class DefaultEntityTableFactoryChain implements EntityTableFactory.Chain 
 
   @Override
   public EntityTable createEntityTable(Class<?> entityClass) {
-    if (index < entityTableFactories.size()) {
-      return entityTableFactories.get(index).createEntityTable(entityClass, next);
+    if (index < factories.size()) {
+      return factories.get(index).createEntityTable(entityClass, next);
     }
     return null;
   }

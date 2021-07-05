@@ -14,19 +14,19 @@ import java.util.Optional;
  * @author liuzh
  */
 public class DefaultEntityColumnFactoryChain implements EntityColumnFactory.Chain {
-  private final List<EntityColumnFactory>       entityColumnFactories;
+  private final List<EntityColumnFactory>       factories;
   private final DefaultEntityColumnFactoryChain next;
   private final int                             index;
 
-  public DefaultEntityColumnFactoryChain(List<EntityColumnFactory> entityColumnFactories) {
-    this(entityColumnFactories, 0);
+  public DefaultEntityColumnFactoryChain(List<EntityColumnFactory> factories) {
+    this(factories, 0);
   }
 
-  private DefaultEntityColumnFactoryChain(List<EntityColumnFactory> entityColumnFactories, int index) {
-    this.entityColumnFactories = entityColumnFactories;
+  private DefaultEntityColumnFactoryChain(List<EntityColumnFactory> factories, int index) {
+    this.factories = factories;
     this.index = index;
-    if (this.index < this.entityColumnFactories.size()) {
-      this.next = new DefaultEntityColumnFactoryChain(entityColumnFactories, this.index + 1);
+    if (this.index < this.factories.size()) {
+      this.next = new DefaultEntityColumnFactoryChain(factories, this.index + 1);
     } else {
       this.next = null;
     }
@@ -34,8 +34,8 @@ public class DefaultEntityColumnFactoryChain implements EntityColumnFactory.Chai
 
   @Override
   public Optional<List<EntityColumn>> createEntityColumn(EntityTable entityTable, EntityField field) {
-    if (index < entityColumnFactories.size()) {
-      return entityColumnFactories.get(index).createEntityColumn(entityTable, field, next);
+    if (index < factories.size()) {
+      return factories.get(index).createEntityColumn(entityTable, field, next);
     }
     return null;
   }

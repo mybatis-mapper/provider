@@ -57,7 +57,7 @@ public abstract class EntityFactory {
    */
   public static EntityTable create(Class<?> entityClass) {
     //处理EntityTable
-    EntityTableFactory.Chain entityTableFactoryChain = EntityFactoryInstance.getEntityTableFactoryChainInstance();
+    EntityTableFactory.Chain entityTableFactoryChain = Instance.getEntityTableFactoryChain();
     //创建 EntityTable，不处理列（字段），此时返回的 EntityTable 已经经过了所有处理链的加工
     EntityTable entityTable = entityTableFactoryChain.createEntityTable(entityClass);
     if (entityTable == null) {
@@ -68,7 +68,7 @@ public abstract class EntityFactory {
       return entityTable;
     }
     //处理EntityColumn
-    EntityColumnFactory.Chain entityColumnFactoryChain = EntityFactoryInstance.getEntityColumnFactoryChainInstance();
+    EntityColumnFactory.Chain entityColumnFactoryChain = Instance.getEntityColumnFactoryChain();
     //未处理的需要获取字段
     Class<?> declaredClass = entityClass;
     boolean isSuperclass = false;
@@ -111,7 +111,7 @@ public abstract class EntityFactory {
   /**
    * 实例
    */
-  static class EntityFactoryInstance {
+  static class Instance {
     private static volatile EntityTableFactory.Chain  entityTableFactoryChain;
     private static volatile EntityColumnFactory.Chain entityColumnFactoryChain;
 
@@ -120,7 +120,7 @@ public abstract class EntityFactory {
      *
      * @return 实例
      */
-    public static EntityTableFactory.Chain getEntityTableFactoryChainInstance() {
+    public static EntityTableFactory.Chain getEntityTableFactoryChain() {
       if (entityTableFactoryChain == null) {
         synchronized (EntityFactory.class) {
           if (entityTableFactoryChain == null) {
@@ -137,7 +137,7 @@ public abstract class EntityFactory {
      *
      * @return 实例
      */
-    public static EntityColumnFactory.Chain getEntityColumnFactoryChainInstance() {
+    public static EntityColumnFactory.Chain getEntityColumnFactoryChain() {
       if (entityColumnFactoryChain == null) {
         synchronized (EntityFactory.class) {
           if (entityColumnFactoryChain == null) {
