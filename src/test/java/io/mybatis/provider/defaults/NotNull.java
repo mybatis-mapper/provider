@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
-@SqlWrapper(NotNullSqlScriptWrapper.class)
+@SqlWrapper(NotNullSqlWrapper.class)
 public @interface NotNull {
 
 }

@@ -1,7 +1,7 @@
 package io.mybatis.provider;
 
 
-import io.mybatis.provider.defaults.AbstractSqlScriptWrapper;
+import io.mybatis.provider.defaults.AnnotationSqlWrapper;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -22,6 +22,6 @@ public @interface SqlWrapper {
    *
    * @return
    */
-  Class<? extends AbstractSqlScriptWrapper>[] value() default {};
+  Class<? extends AnnotationSqlWrapper>[] value() default {};
 
 }

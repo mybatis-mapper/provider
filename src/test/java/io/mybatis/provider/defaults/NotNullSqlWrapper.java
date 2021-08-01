@@ -8,9 +8,9 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Parameter;
 
-public class NotNullSqlScriptWrapper extends AbstractSqlScriptWrapper {
+public class NotNullSqlWrapper extends AnnotationSqlWrapper {
 
-  public NotNullSqlScriptWrapper(Object target, ElementType type, Annotation[] annotations) {
+  public NotNullSqlWrapper(Object target, ElementType type, Annotation[] annotations) {
     super(target, type, annotations);
   }
 

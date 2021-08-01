@@ -25,7 +25,7 @@ public class AnnotationSqlScriptWrapper implements SqlScriptWrapper {
     Class<?> mapperType = context.getMapperType();
     Method mapperMethod = context.getMapperMethod();
     //接口注解
-    List<AbstractSqlScriptWrapper> wrappers = parseAnnotations(mapperType, ElementType.TYPE, mapperType.getAnnotations());
+    List<AnnotationSqlWrapper> wrappers = parseAnnotations(mapperType, ElementType.TYPE, mapperType.getAnnotations());
     //方法注解
     wrappers.addAll(parseAnnotations(mapperMethod, ElementType.METHOD, mapperMethod.getAnnotations()));
     //参数注解
@@ -50,8 +50,8 @@ public class AnnotationSqlScriptWrapper implements SqlScriptWrapper {
    * @param annotations
    * @return
    */
-  private List<AbstractSqlScriptWrapper> parseAnnotations(Object target, ElementType type, Annotation[] annotations) {
-    List<Class<? extends AbstractSqlScriptWrapper>> classes = new ArrayList<>();
+  private List<AnnotationSqlWrapper> parseAnnotations(Object target, ElementType type, Annotation[] annotations) {
+    List<Class<? extends AnnotationSqlWrapper>> classes = new ArrayList<>();
     for (int i = 0; i < annotations.length; i++) {
       Annotation annotation = annotations[i];
       Class<? extends Annotation> annotationType = annotation.annotationType();
@@ -62,7 +62,7 @@ public class AnnotationSqlScriptWrapper implements SqlScriptWrapper {
         classes.addAll(Arrays.asList(annotationTypeAnnotation.value()));
       }
     }
-    return classes.stream().map(c -> (AbstractSqlScriptWrapper) newInstance(c, target, type, annotations))
+    return classes.stream().map(c -> (AnnotationSqlWrapper) newInstance(c, target, type, annotations))
       .collect(Collectors.toList());
   }
 

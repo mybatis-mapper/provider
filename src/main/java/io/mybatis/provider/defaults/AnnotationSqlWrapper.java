@@ -18,12 +18,12 @@ import java.util.stream.Stream;
  *
  * @author liuzh
  */
-public abstract class AbstractSqlScriptWrapper implements SqlScriptWrapper {
+public abstract class AnnotationSqlWrapper implements SqlScriptWrapper {
   protected final ElementType  type;
   protected final Object       target;
   protected final Annotation[] annotations;
 
-  public AbstractSqlScriptWrapper(Object target, ElementType type, Annotation[] annotations) {
+  public AnnotationSqlWrapper(Object target, ElementType type, Annotation[] annotations) {
     this.type = type;
     this.target = target;
     this.annotations = annotations;
@@ -78,7 +78,7 @@ public abstract class AbstractSqlScriptWrapper implements SqlScriptWrapper {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    AbstractSqlScriptWrapper that = (AbstractSqlScriptWrapper) o;
+    AnnotationSqlWrapper that = (AnnotationSqlWrapper) o;
     return type == that.type && target.equals(that.target);
   }
 
