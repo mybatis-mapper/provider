@@ -1,5 +1,10 @@
 package io.mybatis.provider.util;
 
+/**
+ * 断言异常
+ *
+ * @author liuzh
+ */
 public class AssertException extends RuntimeException {
   public AssertException() {
   }

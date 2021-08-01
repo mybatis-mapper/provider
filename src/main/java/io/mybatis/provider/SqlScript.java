@@ -50,7 +50,8 @@ public interface SqlScript {
    */
   static String caching(ProviderContext providerContext, SqlScript sqlScript) {
     EntityTable entity = EntityFactory.create(providerContext.getMapperType(), providerContext.getMapperMethod());
-    return Caching.cache(providerContext, entity, () -> String.format("<script>\n%s\n</script>", sqlScript.getSql(entity)));
+    return Caching.cache(providerContext, entity, () -> String.format("<script>\n%s\n</script>",
+      SqlScriptWrapper.wrapSqlScript(providerContext, entity, sqlScript).getSql(entity)));
   }
 
   /**
@@ -62,7 +63,8 @@ public interface SqlScript {
    */
   static String caching(ProviderContext providerContext, SqlScript2 sqlScript) {
     EntityTable entity = EntityFactory.create(providerContext.getMapperType(), providerContext.getMapperMethod());
-    return Caching.cache(providerContext, entity, () -> String.format("<script>\n%s\n</script>", sqlScript.getSql(entity, sqlScript)));
+    return Caching.cache(providerContext, entity, () -> String.format("<script>\n%s\n</script>",
+      SqlScriptWrapper.wrapSqlScript(providerContext, entity, sqlScript).getSql(entity)));
   }
 
   /**

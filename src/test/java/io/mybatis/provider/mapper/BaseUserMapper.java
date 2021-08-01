@@ -19,6 +19,7 @@ package io.mybatis.provider.mapper;
 import io.mybatis.provider.Caching;
 import io.mybatis.provider.Entity;
 import io.mybatis.provider.EntityInfoMapper;
+import io.mybatis.provider.defaults.NotNull;
 import io.mybatis.provider.model.BaseUser;
 import io.mybatis.provider.model.User;
 import org.apache.ibatis.annotations.DeleteProvider;
@@ -41,6 +42,16 @@ public interface BaseUserMapper extends EntityInfoMapper<BaseUser> {
   @Lang(Caching.class)
   @DeleteProvider(type = BaseProvider.class, method = "deleteById")
   int deleteById(Long id);
+
+  /**
+   * 当前方法只能通过接口上的注解识别实体类类型
+   *
+   * @param id
+   * @return
+   */
+  @Lang(Caching.class)
+  @DeleteProvider(type = BaseProvider.class, method = "deleteById")
+  int deleteByIdNotNull(@NotNull Long id);
 
   /**
    * 方法上的 <code>@Entity</code> 注解优先级高于接口上的注解
