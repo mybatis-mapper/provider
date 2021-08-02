@@ -53,9 +53,16 @@ public abstract class AnnotationSqlWrapper implements SqlScriptWrapper {
     if (paramOptional.isPresent()) {
       return ((Param) paramOptional.get()).value();
     }
+    Executable executable = parameter.getDeclaringExecutable();
+    //只有一个参数时，只能使用默认名称
+    if (executable.getParameterCount() == 1) {
+      return DynamicContext.PARAMETER_OBJECT_KEY;
+    }
     //参数名
     String name = parameter.getName();
-    Executable executable = parameter.getDeclaringExecutable();
+    if (!name.startsWith("arg")) {
+      return name;
+    }
     //获取参数顺序号
     int index = 0;
     Parameter[] parameters = executable.getParameters();
@@ -67,8 +74,6 @@ public abstract class AnnotationSqlWrapper implements SqlScriptWrapper {
     //如果方法不是默认名，就直接使用该名称
     if (!name.equals("arg" + index)) {
       return name;
-    } else if (executable.getParameterCount() == 1) {
-      return DynamicContext.PARAMETER_OBJECT_KEY;
     } else {
       return ParamNameResolver.GENERIC_NAME_PREFIX + (index + 1);
     }
