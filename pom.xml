@@ -22,7 +22,7 @@
 
     <groupId>io.mybatis</groupId>
     <artifactId>mybatis-provider</artifactId>
-    <version>1.0.0-RC3</version>
+    <version>1.0.0</version>
 
     <name>MyBatis Provider</name>
     <description>MyBatis Provider 扩展</description>
