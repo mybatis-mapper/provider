@@ -16,6 +16,7 @@
 
 package io.mybatis.provider;
 
+import io.mybatis.provider.defaults.GenericTypeResolver;
 import io.mybatis.provider.util.Utils;
 import lombok.Getter;
 import lombok.Setter;
@@ -167,9 +168,29 @@ public class EntityTable extends EntityProps<EntityTable> {
    * @param cacheKey        缓存 key，每个方法唯一，默认和 msId 一样
    * @return true 是，false 否
    */
-  protected boolean useResultMaps(ProviderContext providerContext, String cacheKey) {
-    return resultMaps != null
-      && providerContext.getMapperMethod().isAnnotationPresent(SelectProvider.class);
+  protected boolean canUseResultMaps(ProviderContext providerContext, String cacheKey) {
+    if (resultMaps != null
+      && providerContext.getMapperMethod().isAnnotationPresent(SelectProvider.class)) {
+      Class<?> resultType = resultMaps.get(0).getType();
+      //类型相同时直接返回
+      if (resultType == providerContext.getMapperMethod().getReturnType()) {
+        return true;
+      }
+      //可能存在泛型的情况，如 List<T>, Optional<T>, 还有 MyBatis 包含的一些注解
+      Class<?> returnType = GenericTypeResolver.getReturnType(
+        providerContext.getMapperMethod(), providerContext.getMapperType());
+      return resultType == returnType;
+    }
+    return false;
+  }
+
+  /**
+   * 当前实体类是否使用 resultMap
+   *
+   * @return
+   */
+  public boolean useResultMaps() {
+    return resultMaps != null || autoResultMap || Utils.isNotEmpty(resultMap);
   }
 
   /**
@@ -200,7 +221,7 @@ public class EntityTable extends EntityProps<EntityTable> {
       initResultMap(configuration, providerContext, cacheKey);
       initConfiguration.add(configuration);
     }
-    if (useResultMaps(providerContext, cacheKey)) {
+    if (canUseResultMaps(providerContext, cacheKey)) {
       synchronized (cacheKey) {
         if (!hasBeenReplaced(configuration, cacheKey)) {
           MetaObject metaObject = SystemMetaObject.forObject(configuration.getMappedStatement(cacheKey));
@@ -389,7 +410,7 @@ public class EntityTable extends EntityProps<EntityTable> {
    */
   public String baseColumnAsPropertyList() {
     //当存在 resultMaps 时，查询列不能用别名
-    if (resultMaps != null) {
+    if (useResultMaps()) {
       return baseColumnList();
     }
     return selectColumns().stream().map(EntityColumn::columnAsProperty).collect(Collectors.joining(","));

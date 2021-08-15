@@ -60,7 +60,8 @@ public abstract class GenericEntityClassFinder implements EntityClassFinder {
    * @return 实体类类型
    */
   protected Optional<Class<?>> getEntityClassByMapperMethodReturnType(Class<?> mapperType, Method mapperMethod) {
-    return getEntityClassByType(GenericTypeResolver.resolveReturnType(mapperMethod, mapperType));
+    Class<?> returnType = GenericTypeResolver.getReturnType(mapperMethod, mapperType);
+    return isEntityClass(returnType) ? Optional.of(returnType) : Optional.empty();
   }
 
   /**

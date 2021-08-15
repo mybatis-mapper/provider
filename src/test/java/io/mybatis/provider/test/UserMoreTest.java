@@ -47,7 +47,7 @@ public class UserMoreTest {
 
     Assert.assertEquals("sys_user", entityTable.table());
     Assert.assertEquals("id,name,is_admin,seq,points,when_created,info", entityTable.baseColumnList());
-    Assert.assertEquals("id,name,is_admin AS admin,seq,points,when_created AS whenCreated,info", entityTable.baseColumnAsPropertyList());
+    Assert.assertEquals("id,name,is_admin,seq,points,when_created,info", entityTable.baseColumnAsPropertyList());
     Assert.assertEquals("seq DESC", entityTable.orderByColumnList().get());
 
   }

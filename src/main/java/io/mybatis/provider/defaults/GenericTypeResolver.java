@@ -15,11 +15,13 @@
  */
 package io.mybatis.provider.defaults;
 
+import org.apache.ibatis.annotations.MapKey;
+import org.apache.ibatis.annotations.ResultType;
+import org.apache.ibatis.builder.annotation.MapperAnnotationBuilder;
+import org.apache.ibatis.cursor.Cursor;
+
 import java.lang.reflect.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * 源码来自 https://github.com/mybatis/mybatis-3，在此基础上仅添加了一个 resolveMapperTypes 方法
@@ -31,6 +33,70 @@ public class GenericTypeResolver {
 
   private GenericTypeResolver() {
     super();
+  }
+
+  /**
+   * 方法来自 {@link MapperAnnotationBuilder#getReturnType(Method)}
+   *
+   * @param method  方法
+   * @param srcType 方法所属类
+   * @return
+   */
+  public static Class<?> getReturnType(Method method, Class<?> srcType) {
+    Class<?> returnType = method.getReturnType();
+    Type resolvedReturnType = resolveReturnType(method, srcType);
+    if (resolvedReturnType instanceof Class) {
+      returnType = (Class<?>) resolvedReturnType;
+      if (returnType.isArray()) {
+        returnType = returnType.getComponentType();
+      }
+      // gcode issue #508
+      if (void.class.equals(returnType)) {
+        ResultType rt = method.getAnnotation(ResultType.class);
+        if (rt != null) {
+          returnType = rt.value();
+        }
+      }
+    } else if (resolvedReturnType instanceof ParameterizedType) {
+      ParameterizedType parameterizedType = (ParameterizedType) resolvedReturnType;
+      Class<?> rawType = (Class<?>) parameterizedType.getRawType();
+      if (Collection.class.isAssignableFrom(rawType) || Cursor.class.isAssignableFrom(rawType)) {
+        Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+        if (actualTypeArguments != null && actualTypeArguments.length == 1) {
+          Type returnTypeParameter = actualTypeArguments[0];
+          if (returnTypeParameter instanceof Class<?>) {
+            returnType = (Class<?>) returnTypeParameter;
+          } else if (returnTypeParameter instanceof ParameterizedType) {
+            // (gcode issue #443) actual type can be a also a parameterized type
+            returnType = (Class<?>) ((ParameterizedType) returnTypeParameter).getRawType();
+          } else if (returnTypeParameter instanceof GenericArrayType) {
+            Class<?> componentType = (Class<?>) ((GenericArrayType) returnTypeParameter).getGenericComponentType();
+            // (gcode issue #525) support List<byte[]>
+            returnType = Array.newInstance(componentType, 0).getClass();
+          }
+        }
+      } else if (method.isAnnotationPresent(MapKey.class) && Map.class.isAssignableFrom(rawType)) {
+        // (gcode issue 504) Do not look into Maps if there is not MapKey annotation
+        Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+        if (actualTypeArguments != null && actualTypeArguments.length == 2) {
+          Type returnTypeParameter = actualTypeArguments[1];
+          if (returnTypeParameter instanceof Class<?>) {
+            returnType = (Class<?>) returnTypeParameter;
+          } else if (returnTypeParameter instanceof ParameterizedType) {
+            // (gcode issue 443) actual type can be a also a parameterized type
+            returnType = (Class<?>) ((ParameterizedType) returnTypeParameter).getRawType();
+          }
+        }
+      } else if (Optional.class.equals(rawType)) {
+        Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+        Type returnTypeParameter = actualTypeArguments[0];
+        if (returnTypeParameter instanceof Class<?>) {
+          returnType = (Class<?>) returnTypeParameter;
+        }
+      }
+    }
+
+    return returnType;
   }
 
   /**

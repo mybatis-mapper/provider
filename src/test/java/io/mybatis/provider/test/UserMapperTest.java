@@ -17,13 +17,37 @@
 package io.mybatis.provider.test;
 
 import io.mybatis.provider.BaseTest;
+import io.mybatis.provider.EntityFactory;
+import io.mybatis.provider.EntityTable;
 import io.mybatis.provider.mapper.UserMapper;
 import io.mybatis.provider.model.User;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class UserMapperTest extends BaseTest {
+
+  private static EntityTable entityTable;
+
+  @BeforeClass
+  public static void init() {
+    entityTable = EntityFactory.create(User.class);
+  }
+
+  @Test
+  public void testEntityTable() {
+    Assert.assertEquals(3, entityTable.columns().size());
+    Assert.assertEquals(1, entityTable.idColumns().size());
+    Assert.assertEquals(3, entityTable.selectColumns().size());
+    Assert.assertEquals(3, entityTable.insertColumns().size());
+    Assert.assertEquals(3, entityTable.updateColumns().size());
+    Assert.assertEquals(3, entityTable.whereColumns().size());
+
+    Assert.assertEquals("user", entityTable.table());
+    Assert.assertEquals("id,name,sex", entityTable.baseColumnList());
+    Assert.assertEquals("id,name AS username,sex", entityTable.baseColumnAsPropertyList());
+  }
 
   @Test
   public void testGetById() {
