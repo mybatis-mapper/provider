@@ -32,7 +32,7 @@ public class UserMoreTest {
   private static EntityTable entityTable;
 
   @BeforeClass
-  public static void init() {
+  public static void initEntityTable() {
     entityTable = EntityFactory.create(UserMore.class);
   }
 
