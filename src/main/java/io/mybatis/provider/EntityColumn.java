@@ -26,6 +26,9 @@ import org.apache.ibatis.type.UnknownTypeHandler;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Matcher;
+
+import static io.mybatis.provider.EntityTable.DELIMITER;
 
 /**
  * 实体中字段和列的对应关系接口，记录字段上提供的列信息
@@ -195,7 +198,14 @@ public class EntityColumn extends EntityProps<EntityColumn> {
    * @param prefix 指定前缀，需要自己提供"."
    */
   public String columnAsProperty(String prefix) {
-    if (!Objects.equals(column(), property(prefix))) {
+    // 这里的column 和 property 的比较 应该是需要忽略界定符之后再比较
+    // eg: mysql 中 【`order`】 应该认为是 和 field 的 【order】 相同
+    String column = column();
+    Matcher matcher = DELIMITER.matcher(column());
+    if (matcher.find()) {
+      column = matcher.group(1);
+    }
+    if (!Objects.equals(column, property(prefix))) {
       return column() + " AS " + property(prefix);
     }
     return column();
