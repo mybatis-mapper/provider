@@ -64,34 +64,38 @@ public abstract class EntityFactory {
       throw new NullPointerException("Unable to get " + entityClass.getName() + " entity class information");
     }
     //如果实体表已经处理好，直接返回
-    if (entityTable.ready()) {
-      return entityTable;
-    }
-    //处理EntityColumn
-    EntityColumnFactory.Chain entityColumnFactoryChain = Instance.getEntityColumnFactoryChain();
-    //未处理的需要获取字段
-    Class<?> declaredClass = entityClass;
-    boolean isSuperclass = false;
-    while (declaredClass != null && declaredClass != Object.class) {
-      Field[] declaredFields = declaredClass.getDeclaredFields();
-      if (isSuperclass) {
-        reverse(declaredFields);
-      }
-      for (Field field : declaredFields) {
-        int modifiers = field.getModifiers();
-        //排除 static 和 transient 修饰的字段
-        if (!Modifier.isStatic(modifiers) && !Modifier.isTransient(modifiers)) {
-          EntityField entityField = new EntityField(entityClass, field);
-          Optional<List<EntityColumn>> optionalEntityColumns = entityColumnFactoryChain.createEntityColumn(entityTable, entityField);
-          optionalEntityColumns.ifPresent(columns -> columns.forEach(entityTable::addColumn));
+    if (!entityTable.ready()) {
+      synchronized (entityClass) {
+        if (!entityTable.ready()) {
+          System.out.println("处理: " + entityTable.table());
+          //处理EntityColumn
+          EntityColumnFactory.Chain entityColumnFactoryChain = Instance.getEntityColumnFactoryChain();
+          //未处理的需要获取字段
+          Class<?> declaredClass = entityClass;
+          boolean isSuperclass = false;
+          while (declaredClass != null && declaredClass != Object.class) {
+            Field[] declaredFields = declaredClass.getDeclaredFields();
+            if (isSuperclass) {
+              reverse(declaredFields);
+            }
+            for (Field field : declaredFields) {
+              int modifiers = field.getModifiers();
+              //排除 static 和 transient 修饰的字段
+              if (!Modifier.isStatic(modifiers) && !Modifier.isTransient(modifiers)) {
+                EntityField entityField = new EntityField(entityClass, field);
+                Optional<List<EntityColumn>> optionalEntityColumns = entityColumnFactoryChain.createEntityColumn(entityTable, entityField);
+                optionalEntityColumns.ifPresent(columns -> columns.forEach(entityTable::addColumn));
+              }
+            }
+            //迭代获取父类
+            declaredClass = declaredClass.getSuperclass();
+            isSuperclass = true;
+          }
+          //标记处理完成
+          entityTable.ready(true);
         }
       }
-      //迭代获取父类
-      declaredClass = declaredClass.getSuperclass();
-      isSuperclass = true;
     }
-    //标记处理完成
-    entityTable.ready(true);
     return entityTable;
   }
 
