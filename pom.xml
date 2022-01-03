@@ -22,7 +22,7 @@
 
     <groupId>io.mybatis</groupId>
     <artifactId>mybatis-provider</artifactId>
-    <version>1.0.2</version>
+    <version>1.1.0</version>
 
     <name>MyBatis Provider</name>
     <description>MyBatis Provider 扩展</description>
@@ -57,8 +57,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <argLine>-Dfile.encoding=UTF-8</argLine>
 
-        <mybatis.version>3.5.7</mybatis.version>
-        <lombok.version>1.18.20</lombok.version>
+        <mybatis.version>3.5.9</mybatis.version>
+        <lombok.version>1.18.22</lombok.version>
         <hsqldb.version>2.5.1</hsqldb.version>
         <log4j.version>1.2.17</log4j.version>
         <junit.version>4.13</junit.version>
