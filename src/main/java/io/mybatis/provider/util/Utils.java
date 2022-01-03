@@ -16,6 +16,9 @@
 
 package io.mybatis.provider.util;
 
+import io.mybatis.provider.EntityField;
+import io.mybatis.provider.NameConvert;
+
 import java.util.Collection;
 import java.util.Map;
 
@@ -88,9 +91,9 @@ public class Utils {
    */
   public static boolean isBlankChar(int c) {
     return Character.isWhitespace(c)
-      || Character.isSpaceChar(c)
-      || c == '\ufeff'
-      || c == '\u202a';
+        || Character.isSpaceChar(c)
+        || c == '\ufeff'
+        || c == '\u202a';
   }
 
   /**
@@ -174,4 +177,33 @@ public class Utils {
     return !isEmpty(map);
   }
 
+  /**
+   * 转换名称，默认驼峰转下划线，可以通过 SPI 覆盖 {@link NameConvert} 实现
+   *
+   * @param name 名称
+   * @return 转换后的名称
+   */
+  public static String convert(String name) {
+    return NameConvert.getInstance().convert(name);
+  }
+
+  /**
+   * 转换实体名，默认驼峰转下划线，可以通过 SPI 覆盖 {@link NameConvert} 实现
+   *
+   * @param entityClass 实体类
+   * @return 名称，一般用于表名
+   */
+  public static String convertEntityClass(Class<?> entityClass) {
+    return NameConvert.getInstance().convertEntityClass(entityClass);
+  }
+
+  /**
+   * 转换实体字段，默认驼峰转下划线，可以通过 SPI 覆盖 {@link NameConvert} 实现
+   *
+   * @param field 字段
+   * @return 名称，一般用于列名
+   */
+  public static String convertEntityField(EntityField field) {
+    return NameConvert.getInstance().convertEntityField(field);
+  }
 }
