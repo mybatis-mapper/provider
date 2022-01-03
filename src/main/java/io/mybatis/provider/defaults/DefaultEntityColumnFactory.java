@@ -41,6 +41,7 @@ public class DefaultEntityColumnFactory implements EntityColumnFactory {
         .column(columnName)
         .id(column.id())
         .orderBy(column.orderBy())
+        .orderByPriority(column.orderByPriority())
         .selectable(column.selectable())
         .insertable(column.insertable())
         .updatable(column.updatable())

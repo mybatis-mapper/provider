@@ -117,6 +117,11 @@ public @interface Entity {
     String orderBy() default "";
 
     /**
+     * 排序的优先级，多个排序字段时，根据该值确定顺序，数值越小优先级越高
+     */
+    int orderByPriority () default 0;
+
+    /**
      * 可查询
      */
     boolean selectable() default true;

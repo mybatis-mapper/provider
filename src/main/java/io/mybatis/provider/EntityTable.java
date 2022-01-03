@@ -391,7 +391,9 @@ public class EntityTable extends EntityProps<EntityTable> {
    */
   public Optional<List<EntityColumn>> orderByColumns() {
     List<EntityColumn> orderByColumns = columns().stream()
-      .filter(c -> Utils.isNotEmpty(c.orderBy)).collect(Collectors.toList());
+      .filter(c -> Utils.isNotEmpty(c.orderBy))
+        .sorted(Comparator.comparing(EntityColumn::orderByPriority))
+        .collect(Collectors.toList());
     if (orderByColumns.size() > 0) {
       return Optional.of(orderByColumns);
     }

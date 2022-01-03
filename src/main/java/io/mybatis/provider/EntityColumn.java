@@ -67,6 +67,12 @@ public class EntityColumn extends EntityProps<EntityColumn> {
   @Setter
   protected       String                       orderBy;
   /**
+   * 排序的优先级，数值越小优先级越高
+   */
+  @Getter
+  @Setter
+  protected       int                          orderByPriority;
+  /**
    * 是否查询字段
    */
   @Getter
@@ -150,9 +156,9 @@ public class EntityColumn extends EntityProps<EntityColumn> {
    */
   public String variables(String prefix) {
     return "#{" + property(prefix)
-      + jdbcTypeVariables().orElse("")
-      + typeHandlerVariables().orElse("")
-      + numericScaleVariables().orElse("") + "}";
+        + jdbcTypeVariables().orElse("")
+        + typeHandlerVariables().orElse("")
+        + numericScaleVariables().orElse("") + "}";
   }
 
   /**

@@ -29,11 +29,11 @@ import java.util.Date;
 public class UserMore {
   @Entity.Column(id = true, remark = "主键", updatable = false, insertable = false)
   private Long    id;
-  @Entity.Column(value = "name", remark = "帐号")
+  @Entity.Column(value = "name", remark = "帐号", orderBy = "ASC", orderByPriority = 2)
   private String  name;
   @Entity.Column(value = "is_admin", remark = "是否为管理员", updatable = false)
   private boolean admin;
-  @Entity.Column(remark = "顺序号", orderBy = "DESC")
+  @Entity.Column(remark = "顺序号", orderBy = "DESC", orderByPriority = 1)
   private Integer seq;
   @Entity.Column(numericScale = "4", remark = "积分（保留4位小数）")
   private Double  points;
