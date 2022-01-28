@@ -67,7 +67,6 @@ public abstract class EntityFactory {
     if (!entityTable.ready()) {
       synchronized (entityClass) {
         if (!entityTable.ready()) {
-          System.out.println("处理: " + entityTable.table());
           //处理EntityColumn
           EntityColumnFactory.Chain entityColumnFactoryChain = Instance.getEntityColumnFactoryChain();
           //未处理的需要获取字段
