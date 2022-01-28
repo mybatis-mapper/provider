@@ -78,6 +78,15 @@ public class EntityField {
   }
 
   /**
+   * 获取字段上的全部注解信息
+   *
+   * @return 注解信息
+   */
+  public Annotation[] getAnnotations() {
+    return field.getAnnotations();
+  }
+
+  /**
    * 字段上是否配置了指定的注解
    *
    * @param annotationClass 注解类型
