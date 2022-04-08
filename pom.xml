@@ -22,7 +22,7 @@
 
     <groupId>io.mybatis</groupId>
     <artifactId>mybatis-provider</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
 
     <name>MyBatis Provider</name>
     <description>MyBatis Provider 扩展</description>
@@ -57,10 +57,10 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <argLine>-Dfile.encoding=UTF-8</argLine>
 
+        <logback.version>1.2.11</logback.version>
         <mybatis.version>3.5.9</mybatis.version>
         <lombok.version>1.18.22</lombok.version>
-        <hsqldb.version>2.5.1</hsqldb.version>
-        <log4j.version>1.2.17</log4j.version>
+        <hsqldb.version>2.5.2</hsqldb.version>
         <junit.version>4.13</junit.version>
     </properties>
 
@@ -79,8 +79,8 @@
             <artifactId>hsqldb</artifactId>
         </dependency>
         <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -111,9 +111,9 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>log4j</groupId>
-                <artifactId>log4j</artifactId>
-                <version>${log4j.version}</version>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -157,7 +157,7 @@
             </pluginRepositories>
         </profile>
         <profile>
-            <id>deploy-oss-maven</id>
+            <id>release</id>
             <build>
                 <plugins>
                     <!-- Source -->
@@ -206,16 +206,32 @@
                                 </goals>
                             </execution>
                         </executions>
+                        <configuration>
+                            <gpgArguments>
+                                <argument>--pinentry-mode</argument>
+                                <argument>loopback</argument>
+                            </gpgArguments>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
             <distributionManagement>
                 <snapshotRepository>
-                    <id>oss</id>
+                    <id>ossrh</id>
                     <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
                 </snapshotRepository>
                 <repository>
-                    <id>oss</id>
+                    <id>ossrh</id>
                     <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
                 </repository>
             </distributionManagement>
