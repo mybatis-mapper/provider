@@ -55,6 +55,13 @@ public @interface Entity {
     String remark() default "";
 
     /**
+     * 名称规则、样式，同时应用于表名和列名，不想用于表名时，直接指定表名 {@link #value()}即可。
+     * <p>
+     * 在 {@link Style#getStyle(String)} 中，传空时，默认使用 {@link Style#NORMAL}
+     */
+    String style() default "";
+
+    /**
      * 使用指定的 <resultMap>
      */
     String resultMap() default "";
@@ -91,6 +98,14 @@ public @interface Entity {
   }
 
   /**
+   * 排除列
+   */
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target(ElementType.FIELD)
+  public @interface Transient {
+  }
+
+  /**
    * 列名
    */
   @Retention(RetentionPolicy.RUNTIME)
@@ -119,7 +134,7 @@ public @interface Entity {
     /**
      * 排序的优先级，多个排序字段时，根据该值确定顺序，数值越小优先级越高
      */
-    int orderByPriority () default 0;
+    int orderByPriority() default 0;
 
     /**
      * 可查询

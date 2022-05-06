@@ -80,7 +80,7 @@ public class AnnotationSqlScriptWrapper implements SqlScriptWrapper {
     try {
       return (T) instanceClass.getConstructor(Object.class, ElementType.class, Annotation[].class).newInstance(target, type, annotations);
     } catch (Exception e) {
-      throw new RuntimeException("实例化[ " + instanceClass + " ]失败", e);
+      throw new RuntimeException("instance [ " + instanceClass + " ] error", e);
     }
   }
 

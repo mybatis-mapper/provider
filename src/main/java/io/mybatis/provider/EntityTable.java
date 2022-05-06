@@ -57,6 +57,12 @@ public class EntityTable extends EntityProps<EntityTable> {
   @Setter
   protected           String             table;
   /**
+   * 实体类和字段转表名和字段名方式
+   */
+  @Getter
+  @Setter
+  protected           String             style;
+  /**
    * 实体类
    */
   @Getter

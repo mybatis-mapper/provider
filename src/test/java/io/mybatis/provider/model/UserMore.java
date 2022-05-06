@@ -44,6 +44,7 @@ public class UserMore {
   @Entity.Column(remark = "介绍", typeHandler = StringTypeHandler.class)
   private String  info;
   //不是表字段
+  @Entity.Transient
   private String  noExtendColumn;
 
   public Long getId() {

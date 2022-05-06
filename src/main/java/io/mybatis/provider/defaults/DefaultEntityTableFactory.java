@@ -19,6 +19,7 @@ package io.mybatis.provider.defaults;
 import io.mybatis.provider.Entity;
 import io.mybatis.provider.EntityTable;
 import io.mybatis.provider.EntityTableFactory;
+import io.mybatis.provider.Style;
 
 /**
  * 默认实现，针对 {@link Entity.Table} 注解实现
@@ -32,9 +33,10 @@ public class DefaultEntityTableFactory implements EntityTableFactory {
     if (entityClass.isAnnotationPresent(Entity.Table.class)) {
       Entity.Table table = entityClass.getAnnotation(Entity.Table.class);
       EntityTable entityTable = EntityTable.of(entityClass)
-        .table(table.value().isEmpty() ? entityClass.getSimpleName() : table.value())
-        .resultMap(table.resultMap())
-        .autoResultMap(table.autoResultMap());
+          .table(table.value().isEmpty() ? Style.getStyle(table.style()).tableName(entityClass) : table.value())
+          .style(table.style())
+          .resultMap(table.resultMap())
+          .autoResultMap(table.autoResultMap());
       for (Entity.Prop prop : table.props()) {
         entityTable.setProp(prop);
       }
