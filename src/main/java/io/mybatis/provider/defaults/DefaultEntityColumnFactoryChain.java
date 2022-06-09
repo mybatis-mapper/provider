@@ -37,7 +37,7 @@ public class DefaultEntityColumnFactoryChain implements EntityColumnFactory.Chai
     if (index < factories.size()) {
       return factories.get(index).createEntityColumn(entityTable, field, next);
     }
-    return null;
+    return Optional.empty();
   }
 
 }
