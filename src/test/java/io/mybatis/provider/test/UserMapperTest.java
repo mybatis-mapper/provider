@@ -45,8 +45,8 @@ public class UserMapperTest extends BaseTest {
     Assert.assertEquals(3, entityTable.whereColumns().size());
 
     Assert.assertEquals("user", entityTable.table());
-    Assert.assertEquals("id,name,sex", entityTable.baseColumnList());
-    Assert.assertEquals("id,name AS username,sex", entityTable.baseColumnAsPropertyList());
+    Assert.assertEquals("ID,name,SEX", entityTable.baseColumnList());
+    Assert.assertEquals("ID AS id,name AS username,SEX AS sex", entityTable.baseColumnAsPropertyList());
   }
 
   @Test

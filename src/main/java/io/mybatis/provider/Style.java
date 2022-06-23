@@ -1,5 +1,6 @@
 package io.mybatis.provider;
 
+import io.mybatis.config.ConfigHelper;
 import io.mybatis.provider.util.ServiceLoaderUtil;
 
 import java.util.HashMap;
@@ -10,6 +11,11 @@ import java.util.Map;
  * 默认提供的样式，自己可以通过 SPI 扩展
  */
 public interface Style {
+  /**
+   * 默认配置对应的 key
+   */
+  String DEFAULT_STYLE_KEY = "default.entity.table.style";
+
   /**
    * 不做转换
    */
@@ -33,7 +39,7 @@ public interface Style {
   /**
    * 驼峰转大写下划线
    */
-  String UPPER_UNDERSCORE = "UPPER_UNDERSCORE";
+  String UPPER_UNDERSCORE = "upper_underscore";
 
   /**
    * 获取样式名，如默认提供的 normal, underline, lower, upper, upperUnderline
@@ -76,7 +82,7 @@ public interface Style {
    */
   static Style getStyle(String style) {
     if(style == null || style.isEmpty()) {
-      style = NORMAL;
+      style = ConfigHelper.getStr(DEFAULT_STYLE_KEY);
     }
     if (styleMap.containsKey(style)) {
       return styleMap.get(style);
