@@ -7,6 +7,37 @@
 当前项目没有直接提供可用的通用方法，方法在 **mybatis-mapper/mapper**( [gitee](https://gitee.com/mybatis-mapper/mapper)
 | [GitHub](https://github.com/mybatis-mapper/mapper) )中提供。
 
+## 2.0.0 - 2020-06-30
+
+大版本更新，默认不需要给所有字段添加注解，可以通过 `@Entity.Table(style="normal")` 指定字段转换样式，默认空时使用 `lower_underscore`。
+
+默认可选值如下：
+
+- `normal`: 不做转换（不是默认值，需要设置）
+- `lower`: 转小写
+- `upper`: 转大写
+- `lower_underscore`: 驼峰转小写下划线（默认值）
+- `upper_underscore`: 驼峰转大写下划线
+
+想要覆盖默认值时，通过属性 `mybatis.provider.style` 进行修改。
+
+支持以下方式修改：
+
+1. 在类路径下面创建 `mybatis-provider.properties` 配置文件，通过 `mybatis.provider.style=xxx` 指定值。
+2. 除了上面默认位置的配置外，还可以通过环境变量或者系统变量 `io.mybatis.provider.properties` 指定上面的配置名，可以带路径，方便通过外部配置覆盖。   
+   系统变量如： `java -jar -Dio.mybatis.provider.properties=custom.properties 可执行.jar`。
+
+   环境变量如： `IO_MYBATIS_PROVIDER_PROPERTIES=custom.properties java -jar 可执行.jar`。
+
+3. 支持通过环境变量或者系统变量配置，例如 `-Dmybatis.provider.style=xxx`。
+4. 支持Spring方式配置该值，Spring Boot 时可以在配置文件指定，支持 yaml 格式。
+
+上述配置方式的优先级如下：
+
+**Spring（包含了Spring的外部化配置规则和优先级） > 系统变量 > 环境变量 > 配置文件**
+
+除了上面默认几种样式外，还可以通过 SPI 方式扩展 `io.mybatis.provider.Style` 接口，接口方法 `String getStyle()` 返回值为这里要配置的值。
+
 ## 注解
 
 核心提供了一套实体类的注解，简单示例如下：
