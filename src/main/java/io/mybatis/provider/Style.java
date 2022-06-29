@@ -14,7 +14,7 @@ public interface Style {
   /**
    * 默认配置对应的 key
    */
-  String DEFAULT_STYLE_KEY = "default.entity.table.style";
+  String DEFAULT_STYLE_KEY = "mybatis.provider.style";
 
   /**
    * 不做转换

@@ -26,7 +26,7 @@ public class ProviderVersionConfigTest extends TestCase {
   @Test
   public void testGetProperty() {
     Config config = new ProviderVersionConfig();
-    Assert.assertEquals("lower_underscore", config.getStr("default.entity.table.style"));
+    Assert.assertEquals("lower_underscore", config.getStr("mybatis.provider.style"));
   }
 
 }
