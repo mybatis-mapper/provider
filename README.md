@@ -7,7 +7,11 @@
 当前项目没有直接提供可用的通用方法，方法在 **mybatis-mapper/mapper**( [gitee](https://gitee.com/mybatis-mapper/mapper)
 | [GitHub](https://github.com/mybatis-mapper/mapper) )中提供。
 
-## 2.0.0 - 2020-06-30
+## 2.1.0 - 2022-07-09
+
+升级依赖 mybatis-config 为 1.1.0 版本。
+
+## 2.0.0 - 2022-06-30
 
 大版本更新，默认不需要给所有字段添加注解，可以通过 `@Entity.Table(style="normal")` 指定字段转换样式，默认空时使用 `lower_underscore`。
 
