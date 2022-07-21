@@ -132,13 +132,20 @@ public class EntityTable extends EntityProps<EntityTable> {
 
 
   /**
-   *
-   * @return
+   * 默认_parameter下的动态表名
+   * @return 动态表名
    */
   public String tableName(){
     return tableName(null);
   }
 
+
+  /**
+   * @Param多个入参时传入 entity.
+   * 或者传入 example.dynamicTableNameVar
+   * @param var 为空时传回默认动态表名
+   * @return
+   */
   public String tableName(String var){
     String dynamicTable = getProp("dynamicTable");
     String table = Utils.isNotEmpty(dynamicTable) ? dynamicTable : this.table();
@@ -151,6 +158,12 @@ public class EntityTable extends EntityProps<EntityTable> {
     }
     return table;
   }
+
+  /**
+   * 传入对应的动态表名变量，select时返回
+   * @param var 为空时返回默认动态变量 '${field}'
+   * @return
+   */
   public String dynamicTableNameVarReturn(String var){
     String dynamicTable = getProp("dynamicTable");
     String rt = "";
