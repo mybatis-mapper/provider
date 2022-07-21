@@ -130,6 +130,43 @@ public class EntityTable extends EntityProps<EntityTable> {
     return columns().stream().map(EntityColumn::field).collect(Collectors.toList());
   }
 
+
+  /**
+   *
+   * @return
+   */
+  public String tableName(){
+    return tableName(null);
+  }
+
+  public String tableName(String var){
+    String dynamicTable = getProp("dynamicTable");
+    String table = Utils.isNotEmpty(dynamicTable) ? dynamicTable : this.table();
+    if(Utils.isNotEmpty(var)){
+      if(var.endsWith(".")){
+        table = table.replace("${","${"+var);
+      }else{
+        table = table.replaceAll("(\\$\\{)([\\s\\S]*)(\\})","$1"+var+"$3");
+      }
+    }
+    return table;
+  }
+  public String dynamicTableNameVarReturn(String var){
+    String dynamicTable = getProp("dynamicTable");
+    String rt = "";
+    if(Utils.isNotEmpty(dynamicTable)){
+      String alias = dynamicTable.substring(dynamicTable.indexOf("${") + 2, dynamicTable.indexOf("}"));
+      String filed = Utils.isNotEmpty(var) ? var : alias;
+      if(filed.endsWith(".")){
+        filed += alias;
+      }
+      rt =  ", '${"+ filed +"}' as " + alias;
+    }
+    return rt;
+  }
+
+
+
   /**
    * 返回所有列名
    *
