@@ -21,7 +21,7 @@ import io.mybatis.config.defaults.UserConfig;
 /**
  * mybatis-provider 用户配置，优先级高于版本配置，可以覆盖版本默认值
  * <p>
- * 可以通过 provider.properties 属性指定自定义的配置路径或文件名
+ * 可以通过 io.mybatis.provider.properties 属性指定自定义的配置路径或文件名
  *
  * @author liuzh
  */
