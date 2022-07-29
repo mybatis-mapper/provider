@@ -51,7 +51,7 @@ public class EntityTable extends EntityProps<EntityTable> {
   public static final Pattern            DELIMITER         = Pattern.compile("^[`\\[\"]?(.*?)[`\\]\"]?$");
   public static final String             RESULT_MAP_NAME   = "BaseProviderResultMap";
   /**
-   * 表名
+   * 原始表名，在拼 SQL 中，使用 {@link #tableName()} 方法，这个方法可能会返回代理方法加工后的值
    */
   @Getter
   @Setter
@@ -107,6 +107,13 @@ public class EntityTable extends EntityProps<EntityTable> {
 
   public static EntityTable of(Class<?> entityClass) {
     return new EntityTable(entityClass);
+  }
+
+  /**
+   * 获取 SQL 语句中使用的表名
+   */
+  public String tableName() {
+    return table();
   }
 
   /**
