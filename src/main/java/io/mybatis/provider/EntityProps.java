@@ -1,9 +1,10 @@
 package io.mybatis.provider;
 
-import io.mybatis.provider.util.Utils;
+import io.mybatis.config.ConfigHelper;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -17,13 +18,39 @@ public class EntityProps<T extends EntityProps> {
   protected Properties props;
 
   /**
+   * 附加属性的类型
+   */
+  @Getter
+  protected Map<String, Class<?>> propTypeMap;
+
+  /**
    * 获取属性值
    *
    * @param prop 属性名
    * @return 属性值
    */
   public <V> V getProp(String prop) {
-    return props != null ? (V) props.get(prop) : null;
+    if (prop == null || prop.isEmpty()) {
+      return null;
+    }
+    Object val = props != null ? (V) props.get(prop) : null;
+    // 如果配置值不存在，从全局获取配置
+    if (val == null) {
+      val = ConfigHelper.getStr(prop);
+    }
+    if (val == null) {
+      return (V) val;
+    }
+    if (!(val instanceof String)) {
+      return (V) val;
+    }
+    if (propTypeMap.containsKey(prop)) {
+      Class<?> type = propTypeMap.get(prop);
+      if (type != null) {
+        return (V) convertValue((String) val, type);
+      }
+    }
+    return (V) val;
   }
 
   /**
@@ -44,12 +71,24 @@ public class EntityProps<T extends EntityProps> {
    * @param prop  属性名
    * @param value 属性值
    */
-  public T setProp(String prop, Object value) {
+  public T setProp(String prop, Object value, Class<?> type) {
     if (props == null) {
       props = new Properties();
+      propTypeMap = new HashMap<>();
     }
     props.put(prop, value);
+    propTypeMap.put(prop, type);
     return (T) this;
+  }
+
+  /**
+   * 设置属性值
+   *
+   * @param prop  属性名
+   * @param value 属性值
+   */
+  public T setProp(String prop, Object value) {
+    return setProp(prop, value, value != null ? value.getClass() : null);
   }
 
   /**
@@ -58,11 +97,7 @@ public class EntityProps<T extends EntityProps> {
    * @param prop 注解信息
    */
   public T setProp(Entity.Prop prop) {
-    if (props == null) {
-      props = new Properties();
-    }
-    props.put(prop.name(), getEntityPropValue(prop));
-    return (T) this;
+    return setProp(prop.name(), prop.value(), prop.type());
   }
 
   /**
@@ -70,12 +105,11 @@ public class EntityProps<T extends EntityProps> {
    *
    * @param props 属性
    */
-  public <K, V> T setProps(Map<K, V> props) {
-    if (this.props == null) {
-      this.props = new Properties();
-    }
-    if (Utils.isNotEmpty(props)) {
-      this.props.putAll(props);
+  public T setProps(Map<String, ?> props) {
+    if (props != null && !props.isEmpty()) {
+      for (Map.Entry<String, ?> entry : props.entrySet()) {
+        setProp(entry.getKey(), entry.getValue());
+      }
     }
     return (T) this;
   }
@@ -100,23 +134,23 @@ public class EntityProps<T extends EntityProps> {
   /**
    * 获取属性值
    *
-   * @param prop
-   * @return
+   * @param value 值
+   * @param type  类型
+   * @return 转换后的值
    */
-  public static Object getEntityPropValue(Entity.Prop prop) {
-    Class type = prop.type();
+  public static Object convertValue(String value, Class<?> type) {
     if (type == Boolean.class) {
-      return Boolean.parseBoolean(prop.value());
+      return Boolean.parseBoolean(value);
     } else if (type == Integer.class) {
-      return Integer.parseInt(prop.value());
+      return Integer.parseInt(value);
     } else if (type == Long.class) {
-      return Long.parseLong(prop.value());
+      return Long.parseLong(value);
     } else if (type == Double.class) {
-      return Double.parseDouble(prop.value());
+      return Double.parseDouble(value);
     } else if (type == Float.class) {
-      return Float.parseFloat(prop.value());
+      return Float.parseFloat(value);
     }
-    return prop.value();
+    return value;
   }
 
 }
