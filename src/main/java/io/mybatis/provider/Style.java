@@ -76,6 +76,13 @@ public interface Style {
   };
 
   /**
+   * 获取默认样式处理
+   */
+  static Style getDefaultStyle() {
+    return getStyle(null);
+  }
+
+  /**
    * 获取样式
    *
    * @param style 样式名
