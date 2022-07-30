@@ -80,7 +80,7 @@ public @interface Entity {
   }
 
   /**
-   * 属性配置
+   * 属性配置，优先级高于 {@link io.mybatis.config.ConfigHelper } 提供的配置
    */
   @interface Prop {
     /**
@@ -92,11 +92,6 @@ public @interface Entity {
      * 属性值
      */
     String value();
-
-    /**
-     * 属性值类型，支持 String, Integer, Long, Boolean, Double, Float 六种类型
-     */
-    Class type() default String.class;
   }
 
   /**
