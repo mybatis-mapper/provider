@@ -7,6 +7,12 @@
 当前项目没有直接提供可用的通用方法，方法在 **mybatis-mapper/mapper**( [gitee](https://gitee.com/mybatis-mapper/mapper)
 | [GitHub](https://github.com/mybatis-mapper/mapper) )中提供。
 
+## 2.1.1 - 2022-07-31
+
+- `EntityProps` 和 `@Entity.Prop` 不兼容性改动，简化了类型操作。
+- 去掉了 `NameConvert` 接口和 `Utils` 中的相关方法（`Style`可以实现类似功能）
+- `EntityProps` 中 `getProp` 方法支持 `ConfigHelper` 全局配置
+
 ## 2.1.0 - 2022-07-09
 
 大版本更新，默认不需要给所有字段添加注解，可以通过 `@Entity.Table(style="normal")` 指定字段转换样式，默认空时使用 `lower_underscore`。
