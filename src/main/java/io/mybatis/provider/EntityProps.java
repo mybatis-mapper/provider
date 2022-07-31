@@ -85,8 +85,8 @@ public class EntityProps<T extends EntityProps> {
    * @param defaultValue 默认值
    */
   public Boolean getPropBoolean(String prop, Boolean defaultValue) {
-    Boolean val = getPropBoolean(prop);
-    return val != null ? val : defaultValue;
+    String val = getProp(prop);
+    return val != null ? Boolean.parseBoolean(val) : defaultValue;
   }
 
   /**
