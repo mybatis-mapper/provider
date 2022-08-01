@@ -182,7 +182,7 @@ public class EntityTable extends EntityProps<EntityTable> {
    * @return true 是，false 否
    */
   protected boolean canUseResultMaps(ProviderContext providerContext, String cacheKey) {
-    if (resultMaps != null
+    if (resultMaps != null && !resultMaps.isEmpty()
       && providerContext.getMapperMethod().isAnnotationPresent(SelectProvider.class)) {
       Class<?> resultType = resultMaps.get(0).getType();
       //类型相同时直接返回
