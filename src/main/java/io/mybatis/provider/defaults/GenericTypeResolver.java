@@ -134,7 +134,31 @@ public class GenericTypeResolver {
     }
     return result;
   }
-
+  /**
+   * 参考 mp TableInfo.typeToClass
+   * @param type
+   * @return
+   */
+  public static Class<?> typeToClass(Type type) {
+    Class<?> result = null;
+    if (type instanceof Class) {
+      result = (Class<?>) type;
+    } else if (type instanceof ParameterizedType) {
+      result = (Class<?>) ((ParameterizedType) type).getRawType();
+    } else if (type instanceof GenericArrayType) {
+      Type componentType = ((GenericArrayType) type).getGenericComponentType();
+      if (componentType instanceof Class) {
+        result = Array.newInstance((Class<?>) componentType, 0).getClass();
+      } else {
+        Class<?> componentClass = typeToClass(componentType);
+        result = Array.newInstance(componentClass, 0).getClass();
+      }
+    }
+    if (result == null) {
+      result = Object.class;
+    }
+    return result;
+  }
   /**
    * Resolve field type.
    *
