@@ -62,7 +62,7 @@ public interface EntityInfoMapper<T> {
     private static Class<?> getEntityClass(Class<?> clazz) {
       if (!entityClassMap.containsKey(clazz)) {
         entityClassMap.put(clazz, (Class<?>) GenericTypeResolver.resolveType(
-          EntityInfoMapper.class.getTypeParameters()[0], clazz, EntityInfoMapper.class));
+            EntityInfoMapper.class.getTypeParameters()[0], clazz, EntityInfoMapper.class));
       }
       return entityClassMap.get(clazz);
     }

@@ -63,7 +63,7 @@ public class AnnotationSqlScriptWrapper implements SqlScriptWrapper {
       }
     }
     return classes.stream().map(c -> (AnnotationSqlWrapper) newInstance(c, target, type, annotations))
-      .collect(Collectors.toList());
+        .collect(Collectors.toList());
   }
 
   /**

@@ -10,6 +10,20 @@ import java.util.List;
 
 public class ChainTest {
 
+  @Test
+  public void test() {
+    List<EntityTableFactory> factories = new ArrayList<>();
+    factories.add(new A());
+    factories.add(new B());
+    factories.add(new C());
+    factories.sort(Comparator.comparing(EntityTableFactory::getOrder).reversed());
+    DefaultEntityTableFactoryChain chain = new DefaultEntityTableFactoryChain(factories);
+    EntityTable entityTable = chain.createEntityTable(User.class);
+    Assert.assertTrue(entityTable instanceof CTable);
+    Assert.assertTrue(((CTable) entityTable).delegate instanceof BTable);
+    Assert.assertTrue(((BTable) ((CTable) entityTable).delegate).delegate instanceof ATable);
+  }
+
   public static class ATable extends EntityTable {
     EntityTable delegate;
 
@@ -74,20 +88,6 @@ public class ChainTest {
   }
 
   public static class User {
-  }
-
-  @Test
-  public void test() {
-    List<EntityTableFactory> factories = new ArrayList<>();
-    factories.add(new A());
-    factories.add(new B());
-    factories.add(new C());
-    factories.sort(Comparator.comparing(EntityTableFactory::getOrder).reversed());
-    DefaultEntityTableFactoryChain chain = new DefaultEntityTableFactoryChain(factories);
-    EntityTable entityTable = chain.createEntityTable(User.class);
-    Assert.assertTrue(entityTable instanceof CTable);
-    Assert.assertTrue(((CTable) entityTable).delegate instanceof BTable);
-    Assert.assertTrue(((BTable) ((CTable) entityTable).delegate).delegate instanceof ATable);
   }
 
 }

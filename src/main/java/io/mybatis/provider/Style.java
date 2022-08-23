@@ -40,29 +40,6 @@ public interface Style {
    * 驼峰转大写下划线
    */
   String UPPER_UNDERSCORE = "upper_underscore";
-
-  /**
-   * 获取样式名，如默认提供的 normal, underline, lower, upper, upperUnderline
-   */
-  String getStyle();
-
-  /**
-   * 转换表名
-   *
-   * @param entityClass 实体类
-   * @return 对应的表名
-   */
-  String tableName(Class<?> entityClass);
-
-  /**
-   * 转换列名
-   *
-   * @param entityTable
-   * @param field
-   * @return
-   */
-  String columnName(EntityTable entityTable, EntityField field);
-
   /**
    * 初始化样式信息
    */
@@ -88,7 +65,7 @@ public interface Style {
    * @param style 样式名
    */
   static Style getStyle(String style) {
-    if(style == null || style.isEmpty()) {
+    if (style == null || style.isEmpty()) {
       style = ConfigHelper.getStr(DEFAULT_STYLE_KEY);
     }
     if (styleMap.containsKey(style)) {
@@ -97,5 +74,27 @@ public interface Style {
       throw new IllegalArgumentException("illegal style：" + style);
     }
   }
+
+  /**
+   * 获取样式名，如默认提供的 normal, underline, lower, upper, upperUnderline
+   */
+  String getStyle();
+
+  /**
+   * 转换表名
+   *
+   * @param entityClass 实体类
+   * @return 对应的表名
+   */
+  String tableName(Class<?> entityClass);
+
+  /**
+   * 转换列名
+   *
+   * @param entityTable
+   * @param field
+   * @return
+   */
+  String columnName(EntityTable entityTable, EntityField field);
 
 }

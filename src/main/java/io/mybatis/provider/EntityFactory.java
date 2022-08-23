@@ -46,7 +46,7 @@ public abstract class EntityFactory {
       return create(optionalClass.get());
     }
     throw new RuntimeException("Can't obtain " + (mapperMethod != null ?
-      mapperMethod.getName() + " method" : mapperType.getSimpleName() + " interface") + " corresponding entity class");
+        mapperMethod.getName() + " method" : mapperType.getSimpleName() + " interface") + " corresponding entity class");
   }
 
   /**

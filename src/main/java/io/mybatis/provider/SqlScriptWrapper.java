@@ -13,16 +13,6 @@ import java.util.List;
 public interface SqlScriptWrapper extends Order {
 
   /**
-   * 对 script 包装中的 SQL 进行加工处理
-   *
-   * @param context   当前接口和方法信息
-   * @param entity    实体类
-   * @param sqlScript sql脚本
-   * @return
-   */
-  SqlScript wrap(ProviderContext context, EntityTable entity, SqlScript sqlScript);
-
-  /**
    * 包装 SQL
    *
    * @param context   当前接口和方法信息
@@ -36,6 +26,16 @@ public interface SqlScriptWrapper extends Order {
     }
     return sqlScript;
   }
+
+  /**
+   * 对 script 包装中的 SQL 进行加工处理
+   *
+   * @param context   当前接口和方法信息
+   * @param entity    实体类
+   * @param sqlScript sql脚本
+   * @return
+   */
+  SqlScript wrap(ProviderContext context, EntityTable entity, SqlScript sqlScript);
 
   /**
    * 实例
