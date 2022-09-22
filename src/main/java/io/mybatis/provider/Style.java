@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020-2022 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package io.mybatis.provider;
 
 import io.mybatis.config.ConfigHelper;
@@ -40,29 +56,6 @@ public interface Style {
    * 驼峰转大写下划线
    */
   String UPPER_UNDERSCORE = "upper_underscore";
-
-  /**
-   * 获取样式名，如默认提供的 normal, underline, lower, upper, upperUnderline
-   */
-  String getStyle();
-
-  /**
-   * 转换表名
-   *
-   * @param entityClass 实体类
-   * @return 对应的表名
-   */
-  String tableName(Class<?> entityClass);
-
-  /**
-   * 转换列名
-   *
-   * @param entityTable
-   * @param field
-   * @return
-   */
-  String columnName(EntityTable entityTable, EntityField field);
-
   /**
    * 初始化样式信息
    */
@@ -88,7 +81,7 @@ public interface Style {
    * @param style 样式名
    */
   static Style getStyle(String style) {
-    if(style == null || style.isEmpty()) {
+    if (style == null || style.isEmpty()) {
       style = ConfigHelper.getStr(DEFAULT_STYLE_KEY);
     }
     if (styleMap.containsKey(style)) {
@@ -97,5 +90,27 @@ public interface Style {
       throw new IllegalArgumentException("illegal style：" + style);
     }
   }
+
+  /**
+   * 获取样式名，如默认提供的 normal, underline, lower, upper, upperUnderline
+   */
+  String getStyle();
+
+  /**
+   * 转换表名
+   *
+   * @param entityClass 实体类
+   * @return 对应的表名
+   */
+  String tableName(Class<?> entityClass);
+
+  /**
+   * 转换列名
+   *
+   * @param entityTable
+   * @param field
+   * @return
+   */
+  String columnName(EntityTable entityTable, EntityField field);
 
 }

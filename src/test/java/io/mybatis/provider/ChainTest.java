@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020-2022 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package io.mybatis.provider;
 
 import io.mybatis.provider.defaults.DefaultEntityTableFactoryChain;
@@ -9,6 +25,20 @@ import java.util.Comparator;
 import java.util.List;
 
 public class ChainTest {
+
+  @Test
+  public void test() {
+    List<EntityTableFactory> factories = new ArrayList<>();
+    factories.add(new A());
+    factories.add(new B());
+    factories.add(new C());
+    factories.sort(Comparator.comparing(EntityTableFactory::getOrder).reversed());
+    DefaultEntityTableFactoryChain chain = new DefaultEntityTableFactoryChain(factories);
+    EntityTable entityTable = chain.createEntityTable(User.class);
+    Assert.assertTrue(entityTable instanceof CTable);
+    Assert.assertTrue(((CTable) entityTable).delegate instanceof BTable);
+    Assert.assertTrue(((BTable) ((CTable) entityTable).delegate).delegate instanceof ATable);
+  }
 
   public static class ATable extends EntityTable {
     EntityTable delegate;
@@ -74,20 +104,6 @@ public class ChainTest {
   }
 
   public static class User {
-  }
-
-  @Test
-  public void test() {
-    List<EntityTableFactory> factories = new ArrayList<>();
-    factories.add(new A());
-    factories.add(new B());
-    factories.add(new C());
-    factories.sort(Comparator.comparing(EntityTableFactory::getOrder).reversed());
-    DefaultEntityTableFactoryChain chain = new DefaultEntityTableFactoryChain(factories);
-    EntityTable entityTable = chain.createEntityTable(User.class);
-    Assert.assertTrue(entityTable instanceof CTable);
-    Assert.assertTrue(((CTable) entityTable).delegate instanceof BTable);
-    Assert.assertTrue(((BTable) ((CTable) entityTable).delegate).delegate instanceof ATable);
   }
 
 }

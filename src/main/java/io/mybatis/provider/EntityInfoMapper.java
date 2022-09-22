@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 the original author or authors.
+ * Copyright 2020-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,6 +61,7 @@ public interface EntityInfoMapper<T> {
      */
     private static Class<?> getEntityClass(Class<?> clazz) {
       if (!entityClassMap.containsKey(clazz)) {
+
         entityClassMap.put(clazz, GenericTypeResolver.typeToClass(GenericTypeResolver.resolveType(
                 EntityInfoMapper.class.getTypeParameters()[0], clazz, EntityInfoMapper.class)));
       }

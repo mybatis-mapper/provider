@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 the original author or authors.
+ * Copyright 2020-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,16 +35,16 @@ public class DefaultEntityColumnFactory implements EntityColumnFactory {
     if (field.isAnnotationPresent(Entity.Column.class)) {
       Entity.Column column = field.getAnnotation(Entity.Column.class);
       EntityColumn entityColumn = EntityColumn.of(field)
-        .column(column.value().isEmpty() ? Style.getStyle(entityTable.style()).columnName(entityTable, field) : column.value())
-        .id(column.id())
-        .orderBy(column.orderBy())
-        .orderByPriority(column.orderByPriority())
-        .selectable(column.selectable())
-        .insertable(column.insertable())
-        .updatable(column.updatable())
-        .jdbcType(column.jdbcType())
-        .typeHandler(column.typeHandler())
-        .numericScale(column.numericScale());
+          .column(column.value().isEmpty() ? Style.getStyle(entityTable.style()).columnName(entityTable, field) : column.value())
+          .id(column.id())
+          .orderBy(column.orderBy())
+          .orderByPriority(column.orderByPriority())
+          .selectable(column.selectable())
+          .insertable(column.insertable())
+          .updatable(column.updatable())
+          .jdbcType(column.jdbcType())
+          .typeHandler(column.typeHandler())
+          .numericScale(column.numericScale());
       for (Entity.Prop prop : column.props()) {
         entityColumn.setProp(prop);
       }

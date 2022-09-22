@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 the original author or authors.
+ * Copyright 2020-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,16 +32,6 @@ public interface SqlScript {
   String LF = "\n";
 
   /**
-   * 生成 where 标签包装的 xml 结构
-   *
-   * @param content 标签中的内容
-   * @return where 标签包装的 xml 结构
-   */
-  default String where(LRSupplier content) {
-    return String.format("\n<where>%s\n</where> ", content.getWithLR());
-  }
-
-  /**
    * 创建SQL并缓存
    *
    * @param providerContext 执行方法上下文
@@ -51,7 +41,7 @@ public interface SqlScript {
   static String caching(ProviderContext providerContext, SqlScript sqlScript) {
     EntityTable entity = EntityFactory.create(providerContext.getMapperType(), providerContext.getMapperMethod());
     return Caching.cache(providerContext, entity, () -> String.format("<script>\n%s\n</script>",
-      SqlScriptWrapper.wrapSqlScript(providerContext, entity, sqlScript).getSql(entity)));
+        SqlScriptWrapper.wrapSqlScript(providerContext, entity, sqlScript).getSql(entity)));
   }
 
   /**
@@ -64,7 +54,17 @@ public interface SqlScript {
   static String caching(ProviderContext providerContext, SqlScript2 sqlScript) {
     EntityTable entity = EntityFactory.create(providerContext.getMapperType(), providerContext.getMapperMethod());
     return Caching.cache(providerContext, entity, () -> String.format("<script>\n%s\n</script>",
-      SqlScriptWrapper.wrapSqlScript(providerContext, entity, sqlScript).getSql(entity)));
+        SqlScriptWrapper.wrapSqlScript(providerContext, entity, sqlScript).getSql(entity)));
+  }
+
+  /**
+   * 生成 where 标签包装的 xml 结构
+   *
+   * @param content 标签中的内容
+   * @return where 标签包装的 xml 结构
+   */
+  default String where(LRSupplier content) {
+    return String.format("\n<where>%s\n</where> ", content.getWithLR());
   }
 
   /**
@@ -203,7 +203,7 @@ public interface SqlScript {
    */
   default String trim(String prefix, String suffix, String prefixOverrides, String suffixOverrides, LRSupplier content) {
     return String.format("\n<trim prefix=\"%s\" prefixOverrides=\"%s\" suffixOverrides=\"%s\" suffix=\"%s\">%s\n</trim> "
-      , prefix, prefixOverrides, suffixOverrides, suffix, content.getWithLR());
+        , prefix, prefixOverrides, suffixOverrides, suffix, content.getWithLR());
   }
 
   /**
@@ -255,7 +255,7 @@ public interface SqlScript {
    */
   default String foreach(String collection, String item, String separator, LRSupplier content) {
     return String.format("\n<foreach collection=\"%s\" item=\"%s\" separator=\"%s\">%s\n</foreach> "
-      , collection, item, separator, content.getWithLR());
+        , collection, item, separator, content.getWithLR());
   }
 
   /**
@@ -271,7 +271,7 @@ public interface SqlScript {
    */
   default String foreach(String collection, String item, String separator, String open, String close, LRSupplier content) {
     return String.format("\n<foreach collection=\"%s\" item=\"%s\" open=\"%s\" close=\"%s\" separator=\"%s\">%s\n</foreach> "
-      , collection, item, open, close, separator, content.getWithLR());
+        , collection, item, open, close, separator, content.getWithLR());
   }
 
   /**
@@ -288,7 +288,18 @@ public interface SqlScript {
    */
   default String foreach(String collection, String item, String separator, String open, String close, String index, LRSupplier content) {
     return String.format("\n<foreach collection=\"%s\" item=\"%s\" index=\"%s\" open=\"%s\" close=\"%s\" separator=\"%s\">%s\n</foreach> "
-      , collection, item, index, open, close, separator, content.getWithLR());
+        , collection, item, index, open, close, separator, content.getWithLR());
+  }
+
+  /**
+   * 生成 bind 标签包装的 xml 结构
+   *
+   * @param name  变量名
+   * @param value 变量值
+   * @return bind 标签包装的 xml 结构
+   */
+  default String bind(String name, String value) {
+    return String.format("\n<bind name=\"%s\" value=\"%s\"/>", name, value);
   }
 
   /**
@@ -304,17 +315,6 @@ public interface SqlScript {
       return LF + str;
     }
 
-  }
-
-  /**
-   * 生成 bind 标签包装的 xml 结构
-   *
-   * @param name  变量名
-   * @param value 变量值
-   * @return bind 标签包装的 xml 结构
-   */
-  default String bind(String name, String value) {
-    return String.format("\n<bind name=\"%s\" value=\"%s\"/>", name, value);
   }
 
   /**

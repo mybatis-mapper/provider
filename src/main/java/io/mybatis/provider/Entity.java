@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 the original author or authors.
+ * Copyright 2020-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ public @interface Entity {
      * 名称规则、样式，同时应用于表名和列名，不想用于表名时，直接指定表名 {@link #value()}即可。
      * <p>
      * 2.0版本之前默认为 {@link Style#NORMAL}, 2.0版本之后默认使用 {@link Style#LOWER_UNDERSCORE}
-     *
+     * <p>
      * 可以通过 {@link Style#DEFAULT_STYLE_KEY} = 格式 来修改默认值
      */
     String style() default "";
