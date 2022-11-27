@@ -32,6 +32,12 @@ public class BaseMapperTest extends BaseTest {
       Role role = roleMapper.getById(1L);
       Assert.assertNotNull(role);
       Assert.assertEquals("男主角", role.getName());
+
+      role = roleMapper.getById(2L);
+      Assert.assertNotNull(role);
+
+      role = roleMapper.getById(3L);
+      Assert.assertNotNull(role);
     }
   }
 

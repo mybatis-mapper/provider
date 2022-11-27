@@ -17,17 +17,16 @@
 package io.mybatis.provider.mapper;
 
 import io.mybatis.provider.Caching;
-import org.apache.ibatis.annotations.DeleteProvider;
-import org.apache.ibatis.annotations.InsertProvider;
-import org.apache.ibatis.annotations.Lang;
-import org.apache.ibatis.annotations.SelectProvider;
+import org.apache.ibatis.annotations.*;
 
 /**
  * 测试接口泛型参数识别类型，故意调换的两个泛型参数顺序，正常应该找到第二个泛型参数
  */
 public interface BaseMapper<ID, T> extends BaseMapper2<Long, T> {
 
+  @Flush
   @Lang(Caching.class)
+  @Options
   @SelectProvider(type = BaseProvider.class, method = "getById")
   T getById(ID id);
 

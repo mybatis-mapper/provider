@@ -16,6 +16,7 @@
 
 package io.mybatis.provider;
 
+import io.mybatis.config.ConfigHelper;
 import org.apache.ibatis.annotations.Lang;
 import org.apache.ibatis.builder.annotation.ProviderContext;
 import org.apache.ibatis.logging.Log;
@@ -27,6 +28,7 @@ import org.apache.ibatis.session.Configuration;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -39,13 +41,21 @@ public class Caching extends XMLLanguageDriver {
   public static final Log log = LogFactory.getLog(Caching.class);
 
   /**
-   * 缓存方法对应的 SqlCache
+   * 缓存方法对应的 SqlCache，预设1024约等于30个实体，每个实体25个方法
+   * <p>
+   * 当存在一个数据源时，当前缓存是可以最终清空的，但是多个数据源时，就必须保留，因为不清楚什么时候可以清理
    */
-  private static final Map<String, SqlCache>                      CACHE_SQL                   = new ConcurrentHashMap<>(16);
+  private static final Map<String, SqlCache>                      CACHE_SQL                   = new ConcurrentHashMap<>(ConfigHelper.getInt("mybatis.provider.cacheSql.initSize", 1024));
   /**
    * 多数据源，多配置的情况下（甚至单元测试时），同一个方法会在不同的 Configuration 中出现，如果不做处理就会出现不一致
    */
-  private static final Map<Configuration, Map<String, SqlSource>> CONFIGURATION_CACHE_KEY_MAP = new ConcurrentHashMap<>(1);
+  private static final Map<Configuration, Map<String, SqlSource>> CONFIGURATION_CACHE_KEY_MAP = new ConcurrentHashMap<>(4);
+  /**
+   * 是否只使用一次，默认 false，设置为 true 后，当使用过一次后，就会取消引用，可以被后续的GC清理
+   * 当使用SqlSessionFactory配置多数据源时，不能设置为 true，设置true被GC清理后，新的数据源就无法正常使用
+   * 当从DataSource层面做多数据源时，只有一个SqlSessionFactory时，可以设置为true
+   */
+  private static final boolean                                    USE_ONCE                    = ConfigHelper.getBoolean("mybatis.provider.cacheSql.useOnce", false);
 
   /**
    * 根据接口和方法生成缓存 key
@@ -82,12 +92,29 @@ public class Caching extends XMLLanguageDriver {
    * @return 缓存的 key
    */
   public static String cache(ProviderContext providerContext, EntityTable entity, Supplier<String> sqlScriptSupplier) {
+    return cache(providerContext, entity, sqlScriptSupplier, null);
+  }
+
+  /**
+   * 缓存 sqlScript 对应的 SQL 和配置
+   *
+   * @param providerContext   执行方法上下文
+   * @param entity            实体类信息
+   * @param sqlScriptSupplier sql脚本提供者
+   * @param customize         初始化方法时，允许对 ms 进行处理
+   * @return 缓存的 key
+   */
+  public static String cache(ProviderContext providerContext, EntityTable entity, Supplier<String> sqlScriptSupplier, SqlScript.MappedStatementCustomize customize) {
     String cacheKey = cacheKey(providerContext);
     if (!CACHE_SQL.containsKey(cacheKey)) {
       isAnnotationPresentLang(providerContext);
       synchronized (cacheKey) {
         if (!CACHE_SQL.containsKey(cacheKey)) {
-          CACHE_SQL.put(cacheKey, new SqlCache(providerContext, entity, sqlScriptSupplier));
+          CACHE_SQL.put(cacheKey, new SqlCache(
+              Objects.requireNonNull(providerContext),
+              Objects.requireNonNull(entity),
+              Objects.requireNonNull(sqlScriptSupplier),
+              customize));
         }
       }
     }
@@ -102,15 +129,20 @@ public class Caching extends XMLLanguageDriver {
     if (CACHE_SQL.containsKey(script)) {
       //为了容易理解，使用 cacheKey 变量代替 script
       String cacheKey = script;
-      //取出缓存的信息
-      SqlCache cache = CACHE_SQL.get(cacheKey);
       //判断是否已经解析过
       if (!(CONFIGURATION_CACHE_KEY_MAP.containsKey(configuration) && CONFIGURATION_CACHE_KEY_MAP.get(configuration).containsKey(cacheKey))) {
         synchronized (cacheKey) {
           if (!(CONFIGURATION_CACHE_KEY_MAP.containsKey(configuration) && CONFIGURATION_CACHE_KEY_MAP.get(configuration).containsKey(cacheKey))) {
+            //取出缓存的信息
+            SqlCache cache = CACHE_SQL.get(cacheKey);
+            if (cache == SqlCache.NULL) {
+              throw new RuntimeException(script + " => CACHE_SQL is NULL, you need to configure mybatis.provider.cacheSql.useOnce=false");
+            }
             //初始化 EntityTable，每个方法执行一次，可以利用 configuration 进行一些特殊操作
             cache.getEntity().initRuntimeContext(configuration, cache.getProviderContext(), cacheKey);
             Map<String, SqlSource> cachekeyMap = CONFIGURATION_CACHE_KEY_MAP.computeIfAbsent(configuration, k -> new HashMap<>());
+            //定制化处理 ms
+            cache.customize(configuration.getMappedStatement(cacheKey));
             //下面的方法才会真正生成最终的 XML SQL，生成的时候可以用到上面的 configuration 和 ProviderContext 参数
             String sqlScript = cache.getSqlScript();
             if (log.isTraceEnabled()) {
@@ -119,6 +151,10 @@ public class Caching extends XMLLanguageDriver {
             //缓存 sqlSource
             SqlSource sqlSource = super.createSqlSource(configuration, sqlScript, parameterType);
             cachekeyMap.put(cacheKey, sqlSource);
+            //取消cache对象的引用，减少内存占用
+            if (USE_ONCE) {
+              CACHE_SQL.put(cacheKey, SqlCache.NULL);
+            }
           }
         }
       }
