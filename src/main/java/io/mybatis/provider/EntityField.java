@@ -19,9 +19,7 @@ package io.mybatis.provider;
 import io.mybatis.provider.defaults.GenericTypeResolver;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.*;
-
-import static io.mybatis.provider.defaults.GenericTypeResolver.typeToClass;
+import java.lang.reflect.Field;
 
 /**
  * 参考 {@link java.lang.reflect.Field} 中的同名方法
@@ -65,9 +63,8 @@ public class EntityField {
    * @return 字段类型
    */
   public Class<?> getType() {
-    return typeToClass(GenericTypeResolver.resolveFieldType(field, entityClass));
+    return GenericTypeResolver.resolveFieldClass(field, entityClass);
   }
-
 
   /**
    * 获取字段上的指定注解信息

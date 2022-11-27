@@ -18,14 +18,18 @@ package io.mybatis.provider.model;
 
 import io.mybatis.provider.Entity;
 
-@Entity.Table("user")
+import java.util.List;
+
+@Entity.Table(value = "user", autoResultMap = true)
 public class User {
   @Entity.Column(id = true)
-  private Long   id;
+  private Long         id;
   @Entity.Column("name")
-  private String username;
+  private String       username;
   @Entity.Column
-  private String sex;
+  private String       sex;
+  @Entity.Column(typeHandler = StringListTypeHandler.class)
+  private List<String> address;
 
   public Long getId() {
     return id;
@@ -49,5 +53,13 @@ public class User {
 
   public void setSex(String sex) {
     this.sex = sex;
+  }
+
+  public List<String> getAddress() {
+    return address;
+  }
+
+  public void setAddress(List<String> address) {
+    this.address = address;
   }
 }

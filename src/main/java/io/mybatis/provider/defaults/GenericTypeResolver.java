@@ -134,31 +134,7 @@ public class GenericTypeResolver {
     }
     return result;
   }
-  /**
-   * 参考 mp TableInfo.typeToClass
-   * @param type
-   * @return
-   */
-  public static Class<?> typeToClass(Type type) {
-    Class<?> result = null;
-    if (type instanceof Class) {
-      result = (Class<?>) type;
-    } else if (type instanceof ParameterizedType) {
-      result = (Class<?>) ((ParameterizedType) type).getRawType();
-    } else if (type instanceof GenericArrayType) {
-      Type componentType = ((GenericArrayType) type).getGenericComponentType();
-      if (componentType instanceof Class) {
-        result = Array.newInstance((Class<?>) componentType, 0).getClass();
-      } else {
-        Class<?> componentClass = typeToClass(componentType);
-        result = Array.newInstance(componentClass, 0).getClass();
-      }
-    }
-    if (result == null) {
-      result = Object.class;
-    }
-    return result;
-  }
+
   /**
    * Resolve field type.
    *
@@ -171,6 +147,41 @@ public class GenericTypeResolver {
     Type fieldType = field.getGenericType();
     Class<?> declaringClass = field.getDeclaringClass();
     return resolveType(fieldType, srcType, declaringClass);
+  }
+
+  /**
+   * Resolve field type.
+   *
+   * @param field   the field
+   * @param srcType the src type
+   * @return The field type as {@link Type}. If it has type parameters in the declaration,<br>
+   * they will be resolved to the actual runtime {@link Type}s.
+   */
+  public static Class<?> resolveFieldClass(Field field, Type srcType) {
+    Type fieldType = field.getGenericType();
+    Class<?> declaringClass = field.getDeclaringClass();
+    Type type = resolveType(fieldType, srcType, declaringClass);
+    return resolveTypeToClass(type);
+  }
+
+  /**
+   * Resolve Type to Class
+   */
+  public static Class<?> resolveTypeToClass(Type type) {
+    if (type instanceof Class) {
+      return (Class<?>) type;
+    } else if (type instanceof ParameterizedType) {
+      return (Class<?>) ((ParameterizedType) type).getRawType();
+    } else if (type instanceof GenericArrayType) {
+      Type componentType = ((GenericArrayType) type).getGenericComponentType();
+      if (componentType instanceof Class) {
+        return Array.newInstance((Class<?>) componentType, 0).getClass();
+      } else {
+        Class<?> componentClass = resolveTypeToClass(componentType);
+        return Array.newInstance(componentClass, 0).getClass();
+      }
+    }
+    return Object.class;
   }
 
   /**

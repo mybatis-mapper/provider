@@ -37,16 +37,19 @@ public class UserMapperTest extends BaseTest {
 
   @Test
   public void testEntityTable() {
-    Assert.assertEquals(3, entityTable.columns().size());
+    Assert.assertEquals(4, entityTable.columns().size());
     Assert.assertEquals(1, entityTable.idColumns().size());
-    Assert.assertEquals(3, entityTable.selectColumns().size());
-    Assert.assertEquals(3, entityTable.insertColumns().size());
-    Assert.assertEquals(3, entityTable.updateColumns().size());
-    Assert.assertEquals(3, entityTable.whereColumns().size());
+    Assert.assertEquals(4, entityTable.selectColumns().size());
+    Assert.assertEquals(4, entityTable.insertColumns().size());
+    Assert.assertEquals(4, entityTable.updateColumns().size());
+    Assert.assertEquals(4, entityTable.whereColumns().size());
 
     Assert.assertEquals("user", entityTable.table());
-    Assert.assertEquals("ID,name,SEX", entityTable.baseColumnList());
-    Assert.assertEquals("ID AS id,name AS username,SEX AS sex", entityTable.baseColumnAsPropertyList());
+    Assert.assertEquals("ID,name,SEX,ADDRESS", entityTable.baseColumnList());
+    Assert.assertEquals("ID,name,SEX,ADDRESS", entityTable.baseColumnAsPropertyList());
+    //Entity.Table(value = "user", autoResultMap = true)
+    //autoResultMap=true会去掉AS别名
+    //Assert.assertEquals("ID AS id,name AS username,SEX AS sex,ADDRESS AS address", entityTable.baseColumnAsPropertyList());
   }
 
   @Test
@@ -57,6 +60,8 @@ public class UserMapperTest extends BaseTest {
       Assert.assertNotNull(user);
       Assert.assertEquals("张无忌", user.getUsername());
       Assert.assertEquals("男", user.getSex());
+      Assert.assertEquals("明教", user.getAddress().get(0));
+      Assert.assertEquals("教主", user.getAddress().get(1));
     }
   }
 
