@@ -23,8 +23,6 @@ import io.mybatis.provider.MsCustomize;
 import org.apache.ibatis.annotations.InsertProvider;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.SelectKey;
-import org.apache.ibatis.builder.BuilderException;
-import org.apache.ibatis.builder.IncompleteElementException;
 import org.apache.ibatis.builder.annotation.ProviderContext;
 import org.apache.ibatis.executor.keygen.Jdbc3KeyGenerator;
 import org.apache.ibatis.executor.keygen.KeyGenerator;
@@ -43,7 +41,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 针对注解 @Entity.KeySql 的处理，当方法使用 MyBatis 注解配置过主键策略时，会有警告信息，并跳过主键的自动配置
+ * 针对实体类上主键策略的处理，当方法使用 MyBatis 注解配置过主键策略时，会有警告信息，并跳过主键的自动配置
  */
 public class KeySqlMsCustomize implements MsCustomize {
   public static final Log log = LogFactory.getLog(KeySqlMsCustomize.class);
@@ -55,7 +53,7 @@ public class KeySqlMsCustomize implements MsCustomize {
       List<EntityColumn> ids = entity.idColumns().stream()
           .filter(EntityColumn::hasPrimaryKeyStrategy).collect(Collectors.toList());
       if (ids.size() > 1) {
-        throw new RuntimeException("只能有一个主键配置 @Entity.KeySql 注解");
+        throw new RuntimeException("只能有一个字段配置主键策略");
       }
       if (ids.size() < 1) {
         return;
@@ -63,14 +61,12 @@ public class KeySqlMsCustomize implements MsCustomize {
       if (mapperMethod.isAnnotationPresent(Options.class)) {
         Options options = mapperMethod.getAnnotation(Options.class);
         if (options.useGeneratedKeys()) {
-          log.warn("The method [" + mapperMethod.getName() + "] of the mapper [" + context.getMapperType().getName()
-              + "] is configured with the @Options(useGeneratedKeys = true) annotation, and the @Entity.KeySql annotation will be ignored.");
+          log.warn("接口 " + context.getMapperType().getName() + " 方法 " + mapperMethod.getName() + " 使用了 @Options(useGeneratedKeys = true)，忽略实体上的主键策略");
           return;
         }
       }
       if (mapperMethod.isAnnotationPresent(SelectKey.class)) {
-        log.warn("The method [" + mapperMethod.getName() + "] of the mapper [" + context.getMapperType().getName()
-            + "] is configured with the @SelectKey annotation, and the @Entity.KeySql annotation will be ignored.");
+        log.warn("接口 " + context.getMapperType().getName() + " 方法 " + mapperMethod.getName() + " 使用了 @SelectKey，忽略实体上的主键策略");
         return;
       }
       EntityColumn id = ids.get(0);
@@ -79,7 +75,7 @@ public class KeySqlMsCustomize implements MsCustomize {
         metaObject.setValue("keyGenerator", Jdbc3KeyGenerator.INSTANCE);
         metaObject.setValue("keyProperties", new String[]{id.property()});
       } else if (!id.afterSql().isEmpty()) {
-        KeyGenerator keyGenerator = handleSelectKeyAnnotation(ms, context, id, id.afterSql(), false);
+        KeyGenerator keyGenerator = handleSelectKeyGenerator(ms, id, id.afterSql(), false);
         MetaObject metaObject = ms.getConfiguration().newMetaObject(ms);
         metaObject.setValue("keyGenerator", keyGenerator);
         metaObject.setValue("keyProperties", new String[]{id.property()});
@@ -88,7 +84,7 @@ public class KeySqlMsCustomize implements MsCustomize {
         boolean executeBefore = id.genIdExecuteBefore();
         GenId<?> genId = null;
         try {
-          genId = genIdClass.getConstructor().newInstance();
+          genId = genIdClass.getConstructor(new Class[]{}).newInstance();
         } catch (Exception e) {
           throw new RuntimeException(e);
         }
@@ -100,11 +96,18 @@ public class KeySqlMsCustomize implements MsCustomize {
     }
   }
 
-  private KeyGenerator handleSelectKeyAnnotation(MappedStatement ms,
-                                                 ProviderContext context,
-                                                 EntityColumn column,
-                                                 String sql,
-                                                 boolean executeBefore) {
+  /**
+   * 生成可以执行SQL的 SelectKeyGenerator
+   *
+   * @param ms            MappedStatement
+   * @param column        主键字段
+   * @param sql           SQL
+   * @param executeBefore 是否在插入之前执行
+   */
+  private KeyGenerator handleSelectKeyGenerator(MappedStatement ms,
+                                                EntityColumn column,
+                                                String sql,
+                                                boolean executeBefore) {
     String id = ms.getId() + SelectKeyGenerator.SELECT_KEY_SUFFIX;
     Configuration configuration = ms.getConfiguration();
     LanguageDriver languageDriver = configuration.getLanguageDriver(Caching.class);
@@ -122,12 +125,12 @@ public class KeySqlMsCustomize implements MsCustomize {
         .lang(languageDriver)
         .resultOrdered(false)
         .resultSets(null)
-        .resultMaps(getStatementResultMaps(ms, context, null, column.javaType(), id))
+        .resultMaps(getStatementResultMaps(ms, column.javaType(), id))
         .resultSetType(null)
         .flushCacheRequired(false)
         .useCache(false)
         .cache(null);
-    ParameterMap statementParameterMap = getStatementParameterMap(ms, context, null, ms.getParameterMap().getType(), id);
+    ParameterMap statementParameterMap = getStatementParameterMap(ms, ms.getParameterMap().getType(), id);
     if (statementParameterMap != null) {
       statementBuilder.parameterMap(statementParameterMap);
     }
@@ -135,86 +138,30 @@ public class KeySqlMsCustomize implements MsCustomize {
     MappedStatement statement = statementBuilder.build();
     configuration.addMappedStatement(statement);
 
-    id = applyCurrentNamespace(context.getMapperType().getName(), id, false);
-
-    MappedStatement keyStatement = configuration.getMappedStatement(id, false);
-    SelectKeyGenerator answer = new SelectKeyGenerator(keyStatement, executeBefore);
-    configuration.addKeyGenerator(id, answer);
-    return answer;
+    SelectKeyGenerator keyGenerator = new SelectKeyGenerator(statement, executeBefore);
+    configuration.addKeyGenerator(id, keyGenerator);
+    return keyGenerator;
   }
 
-  public String applyCurrentNamespace(String currentNamespace, String base, boolean isReference) {
-    if (base == null) {
-      return null;
-    }
-    if (isReference) {
-      // is it qualified with any namespace yet?
-      if (base.contains(".")) {
-        return base;
-      }
-    } else {
-      // is it qualified with this namespace yet?
-      if (base.startsWith(currentNamespace + ".")) {
-        return base;
-      }
-      if (base.contains(".")) {
-        throw new BuilderException("Dots are not allowed in element names, please remove it from " + base);
-      }
-    }
-    return currentNamespace + "." + base;
-  }
-
-  private ParameterMap getStatementParameterMap(
-      MappedStatement ms,
-      ProviderContext context,
-      String parameterMapName,
-      Class<?> parameterTypeClass,
-      String statementId) {
-    parameterMapName = applyCurrentNamespace(context.getMapperType().getName(), parameterMapName, true);
-    ParameterMap parameterMap = null;
-    if (parameterMapName != null) {
-      try {
-        parameterMap = ms.getConfiguration().getParameterMap(parameterMapName);
-      } catch (IllegalArgumentException e) {
-        throw new IncompleteElementException("Could not find parameter map " + parameterMapName, e);
-      }
-    } else if (parameterTypeClass != null) {
-      List<ParameterMapping> parameterMappings = new ArrayList<>();
-      parameterMap = new ParameterMap.Builder(
-          ms.getConfiguration(),
-          statementId + "-Inline",
-          parameterTypeClass,
-          parameterMappings).build();
-    }
+  private ParameterMap getStatementParameterMap(MappedStatement ms, Class<?> parameterTypeClass, String statementId) {
+    List<ParameterMapping> parameterMappings = new ArrayList<>();
+    ParameterMap parameterMap = new ParameterMap.Builder(
+        ms.getConfiguration(),
+        statementId + "-Inline",
+        parameterTypeClass,
+        parameterMappings).build();
     return parameterMap;
   }
 
-  private List<ResultMap> getStatementResultMaps(MappedStatement ms,
-                                                 ProviderContext context,
-                                                 String resultMap,
-                                                 Class<?> resultType,
-                                                 String statementId) {
-    resultMap = applyCurrentNamespace(context.getMapperType().getName(), resultMap, true);
-
+  private List<ResultMap> getStatementResultMaps(MappedStatement ms, Class<?> resultType, String statementId) {
     List<ResultMap> resultMaps = new ArrayList<>();
-    if (resultMap != null) {
-      String[] resultMapNames = resultMap.split(",");
-      for (String resultMapName : resultMapNames) {
-        try {
-          resultMaps.add(ms.getConfiguration().getResultMap(resultMapName.trim()));
-        } catch (IllegalArgumentException e) {
-          throw new IncompleteElementException("Could not find result map '" + resultMapName + "' referenced from '" + statementId + "'", e);
-        }
-      }
-    } else if (resultType != null) {
-      ResultMap inlineResultMap = new ResultMap.Builder(
-          ms.getConfiguration(),
-          statementId + "-Inline",
-          resultType,
-          new ArrayList<>(),
-          null).build();
-      resultMaps.add(inlineResultMap);
-    }
+    ResultMap inlineResultMap = new ResultMap.Builder(
+        ms.getConfiguration(),
+        statementId + "-Inline",
+        resultType,
+        new ArrayList<>(),
+        null).build();
+    resultMaps.add(inlineResultMap);
     return resultMaps;
   }
 
