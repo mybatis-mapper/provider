@@ -172,6 +172,9 @@ public class GenericTypeResolver {
       return (Class<?>) type;
     } else if (type instanceof ParameterizedType) {
       return (Class<?>) ((ParameterizedType) type).getRawType();
+    } else if (type instanceof TypeVariable<?>) {
+      Type[] bounds = ((TypeVariable<?>) type).getBounds();
+      return (Class<?>) bounds[0];
     } else if (type instanceof GenericArrayType) {
       Type componentType = ((GenericArrayType) type).getGenericComponentType();
       if (componentType instanceof Class) {

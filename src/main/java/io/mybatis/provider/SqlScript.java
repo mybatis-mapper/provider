@@ -349,10 +349,11 @@ public interface SqlScript {
     /**
      * 定制化 ms
      *
-     * @param entity 实体
-     * @param ms     MappedStatement
+     * @param entity  实体
+     * @param ms      MappedStatement
+     * @param context
      */
-    void customize(EntityTable entity, MappedStatement ms);
+    void customize(EntityTable entity, MappedStatement ms, ProviderContext context);
   }
 
   /**

@@ -32,6 +32,10 @@ public class BaseTest {
 
   @BeforeClass
   public static void init() {
+    //这里多次创建会导致出现多个 Configuration，会导致 Caching 中的 CACHE_SQL 被清除出错
+    if (sqlSessionFactory != null) {
+      return;
+    }
     try {
       Reader reader = Resources.getResourceAsReader("mybatis-config.xml");
       sqlSessionFactory = new SqlSessionFactoryBuilder().build(reader);

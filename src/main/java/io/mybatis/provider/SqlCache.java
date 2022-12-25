@@ -69,7 +69,7 @@ public class SqlCache {
    */
   public void customize(MappedStatement ms) {
     if (this.customize != null) {
-      this.customize.customize(entity, ms);
+      this.customize.customize(entity, ms, providerContext);
     }
   }
 
