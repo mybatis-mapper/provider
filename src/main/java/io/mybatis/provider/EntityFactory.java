@@ -82,12 +82,20 @@ public abstract class EntityFactory {
               //排除 static 和 transient 修饰的字段
               if (!Modifier.isStatic(modifiers) && !Modifier.isTransient(modifiers)) {
                 EntityField entityField = new EntityField(entityClass, field);
+                // 是否需要排除字段
+                if (entityTable.isExcludeField(entityField)) {
+                  continue;
+                }
                 Optional<List<EntityColumn>> optionalEntityColumns = entityColumnFactoryChain.createEntityColumn(entityTable, entityField);
                 optionalEntityColumns.ifPresent(columns -> columns.forEach(entityTable::addColumn));
               }
             }
             //迭代获取父类
             declaredClass = declaredClass.getSuperclass();
+            //排除父类
+            while (entityTable.isExcludeSuperClass(declaredClass) && declaredClass != Object.class) {
+              declaredClass = declaredClass.getSuperclass();
+            }
             isSuperclass = true;
           }
           //标记处理完成

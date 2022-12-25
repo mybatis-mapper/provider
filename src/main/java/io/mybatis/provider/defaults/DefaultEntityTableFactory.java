@@ -36,7 +36,10 @@ public class DefaultEntityTableFactory implements EntityTableFactory {
           .table(table.value().isEmpty() ? Style.getStyle(table.style()).tableName(entityClass) : table.value())
           .style(table.style())
           .resultMap(table.resultMap())
-          .autoResultMap(table.autoResultMap());
+          .autoResultMap(table.autoResultMap())
+          .excludeSuperClasses(table.excludeSuperClasses())
+          .excludeFieldTypes(table.excludeFieldTypes())
+          .excludeFields(table.excludeFields());
       for (Entity.Prop prop : table.props()) {
         entityTable.setProp(prop);
       }

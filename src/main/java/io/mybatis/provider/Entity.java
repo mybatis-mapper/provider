@@ -78,6 +78,21 @@ public @interface Entity {
      * 属性配置
      */
     Prop[] props() default {};
+
+    /**
+     * 排除指定父类的所有字段
+     */
+    Class<?>[] excludeSuperClasses() default {};
+
+    /**
+     * 排除指定类型的字段
+     */
+    Class<?>[] excludeFieldTypes() default {};
+
+    /**
+     * 排除指定字段名的字段
+     */
+    String[] excludeFields() default {};
   }
 
   /**

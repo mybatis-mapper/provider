@@ -77,27 +77,45 @@ public class EntityTable extends EntityProps<EntityTable> {
    */
   @Getter
   @Setter
-  protected           boolean            ready;
+  protected boolean            ready;
   /**
    * 使用指定的 &lt;resultMap&gt;
    */
   @Getter
   @Setter
-  protected           String             resultMap;
+  protected String             resultMap;
   /**
    * 自动根据字段生成 &lt;resultMap&gt;
    */
   @Getter
   @Setter
-  protected           boolean            autoResultMap;
+  protected boolean            autoResultMap;
   /**
    * 已初始化自动ResultMap
    */
-  protected           List<ResultMap>    resultMaps;
+  protected List<ResultMap>    resultMaps;
+  /**
+   * 排除指定父类的所有字段
+   */
+  @Getter
+  @Setter
+  protected Class<?>[]         excludeSuperClasses;
+  /**
+   * 排除指定类型的字段
+   */
+  @Getter
+  @Setter
+  protected Class<?>[]         excludeFieldTypes;
+  /**
+   * 排除指定字段名的字段
+   */
+  @Getter
+  @Setter
+  protected String[]           excludeFields;
   /**
    * 已经初始化的配置
    */
-  protected           Set<Configuration> initConfiguration = new HashSet<>();
+  protected Set<Configuration> initConfiguration = new HashSet<>();
   //<editor-fold desc="基础方法，必须实现的方法">
 
   protected EntityTable(Class<?> entityClass) {
@@ -182,7 +200,7 @@ public class EntityTable extends EntityProps<EntityTable> {
    */
   protected boolean canUseResultMaps(ProviderContext providerContext, String cacheKey) {
     if (resultMaps != null && !resultMaps.isEmpty()
-      && providerContext.getMapperMethod().isAnnotationPresent(SelectProvider.class)) {
+        && providerContext.getMapperMethod().isAnnotationPresent(SelectProvider.class)) {
       Class<?> resultType = resultMaps.get(0).getType();
       //类型相同时直接返回
       if (resultType == providerContext.getMapperMethod().getReturnType()) {
@@ -495,6 +513,49 @@ public class EntityTable extends EntityProps<EntityTable> {
   public Optional<String> orderByColumn() {
     Optional<String> orderColumnList = orderByColumnList();
     return orderColumnList.map(s -> " ORDER BY " + s);
+  }
+
+  /**
+   * 是否需要排除父类
+   *
+   * @param superClass 父类
+   * @return true - 需要排除，false - 不需要排除
+   */
+  public boolean isExcludeSuperClass(Class<?> superClass) {
+    if (excludeSuperClasses != null) {
+      for (Class<?> clazz : excludeSuperClasses) {
+        if (clazz == superClass) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * 是否需要排除指定的字段
+   *
+   * @param field 字段
+   * @return true - 需要排除，false - 不需要排除
+   */
+  public boolean isExcludeField(EntityField field) {
+    if (excludeFieldTypes != null) {
+      Class<?> fieldType = field.getType();
+      for (Class<?> clazz : excludeFieldTypes) {
+        if (clazz == fieldType) {
+          return true;
+        }
+      }
+    }
+    if (excludeFields != null) {
+      String fieldName = field.getName();
+      for (String excludeField : excludeFields) {
+        if (excludeField.equals(fieldName)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
   //</editor-fold>
 
