@@ -28,7 +28,6 @@ import org.apache.ibatis.mapping.ResultFlag;
 import org.apache.ibatis.mapping.ResultMap;
 import org.apache.ibatis.mapping.ResultMapping;
 import org.apache.ibatis.reflection.MetaObject;
-import org.apache.ibatis.reflection.SystemMetaObject;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeException;
@@ -237,7 +236,7 @@ public class EntityTable extends EntityProps<EntityTable> {
     if (canUseResultMaps(providerContext, cacheKey)) {
       synchronized (cacheKey) {
         if (!hasBeenReplaced(configuration, cacheKey)) {
-          MetaObject metaObject = SystemMetaObject.forObject(configuration.getMappedStatement(cacheKey));
+          MetaObject metaObject = configuration.newMetaObject(configuration.getMappedStatement(cacheKey));
           metaObject.setValue("resultMaps", Collections.unmodifiableList(resultMaps));
         }
       }

@@ -17,7 +17,6 @@
 package io.mybatis.provider;
 
 import org.apache.ibatis.builder.annotation.ProviderContext;
-import org.apache.ibatis.mapping.MappedStatement;
 
 import java.util.function.Supplier;
 
@@ -40,7 +39,9 @@ public interface SqlScript {
    * @return 缓存key
    */
   static String caching(ProviderContext providerContext, SqlScript sqlScript) {
-    return caching(providerContext, sqlScript, null);
+    EntityTable entity = EntityFactory.create(providerContext.getMapperType(), providerContext.getMapperMethod());
+    return Caching.cache(providerContext, entity, () -> String.format("<script>\n%s\n</script>",
+        SqlScriptWrapper.wrapSqlScript(providerContext, entity, sqlScript).getSql(entity)));
   }
 
   /**
@@ -51,35 +52,9 @@ public interface SqlScript {
    * @return 缓存key
    */
   static String caching(ProviderContext providerContext, SqlScript2 sqlScript) {
-    return caching(providerContext, sqlScript, null);
-  }
-
-  /**
-   * 创建SQL并缓存
-   *
-   * @param providerContext 执行方法上下文
-   * @param sqlScript       xml sql 脚本实现
-   * @param customize       初次运行时，对 ms 进行定制化处理
-   * @return 缓存key
-   */
-  static String caching(ProviderContext providerContext, SqlScript sqlScript, MappedStatementCustomize customize) {
     EntityTable entity = EntityFactory.create(providerContext.getMapperType(), providerContext.getMapperMethod());
     return Caching.cache(providerContext, entity, () -> String.format("<script>\n%s\n</script>",
-        SqlScriptWrapper.wrapSqlScript(providerContext, entity, sqlScript).getSql(entity)), customize);
-  }
-
-  /**
-   * 创建SQL并缓存
-   *
-   * @param providerContext 执行方法上下文
-   * @param sqlScript       xml sql 脚本实现
-   * @param customize       初次运行时，对 ms 进行定制化处理
-   * @return 缓存key
-   */
-  static String caching(ProviderContext providerContext, SqlScript2 sqlScript, MappedStatementCustomize customize) {
-    EntityTable entity = EntityFactory.create(providerContext.getMapperType(), providerContext.getMapperMethod());
-    return Caching.cache(providerContext, entity, () -> String.format("<script>\n%s\n</script>",
-        SqlScriptWrapper.wrapSqlScript(providerContext, entity, sqlScript).getSql(entity)), customize);
+        SqlScriptWrapper.wrapSqlScript(providerContext, entity, sqlScript).getSql(entity)));
   }
 
   /**
@@ -340,20 +315,6 @@ public interface SqlScript {
       return LF + str;
     }
 
-  }
-
-  /**
-   * 支持定制化处理 {@link MappedStatement}
-   */
-  interface MappedStatementCustomize {
-    /**
-     * 定制化 ms
-     *
-     * @param entity  实体
-     * @param ms      MappedStatement
-     * @param context
-     */
-    void customize(EntityTable entity, MappedStatement ms, ProviderContext context);
   }
 
   /**

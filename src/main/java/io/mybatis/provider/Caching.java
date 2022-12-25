@@ -21,6 +21,7 @@ import org.apache.ibatis.annotations.Lang;
 import org.apache.ibatis.builder.annotation.ProviderContext;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
+import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.scripting.xmltags.XMLLanguageDriver;
 import org.apache.ibatis.session.Configuration;
@@ -83,6 +84,7 @@ public class Caching extends XMLLanguageDriver {
     throw new RuntimeException(mapperMethod + " need to configure @Lang(Caching.class) to use the Caching.cache method for caching");
   }
 
+
   /**
    * 缓存 sqlScript 对应的 SQL 和配置
    *
@@ -92,19 +94,6 @@ public class Caching extends XMLLanguageDriver {
    * @return 缓存的 key
    */
   public static String cache(ProviderContext providerContext, EntityTable entity, Supplier<String> sqlScriptSupplier) {
-    return cache(providerContext, entity, sqlScriptSupplier, null);
-  }
-
-  /**
-   * 缓存 sqlScript 对应的 SQL 和配置
-   *
-   * @param providerContext   执行方法上下文
-   * @param entity            实体类信息
-   * @param sqlScriptSupplier sql脚本提供者
-   * @param customize         初始化方法时，允许对 ms 进行处理
-   * @return 缓存的 key
-   */
-  public static String cache(ProviderContext providerContext, EntityTable entity, Supplier<String> sqlScriptSupplier, SqlScript.MappedStatementCustomize customize) {
     String cacheKey = cacheKey(providerContext);
     if (!CACHE_SQL.containsKey(cacheKey)) {
       isAnnotationPresentLang(providerContext);
@@ -113,8 +102,7 @@ public class Caching extends XMLLanguageDriver {
           CACHE_SQL.put(cacheKey, new SqlCache(
               Objects.requireNonNull(providerContext),
               Objects.requireNonNull(entity),
-              Objects.requireNonNull(sqlScriptSupplier),
-              customize));
+              Objects.requireNonNull(sqlScriptSupplier)));
         }
       }
     }
@@ -142,7 +130,8 @@ public class Caching extends XMLLanguageDriver {
             cache.getEntity().initRuntimeContext(configuration, cache.getProviderContext(), cacheKey);
             Map<String, SqlSource> cachekeyMap = CONFIGURATION_CACHE_KEY_MAP.computeIfAbsent(configuration, k -> new HashMap<>());
             //定制化处理 ms
-            cache.customize(configuration.getMappedStatement(cacheKey));
+            MappedStatement ms = configuration.getMappedStatement(cacheKey);
+            MsCustomize.SPI.customize(cache.getEntity(), ms, cache.getProviderContext());
             //下面的方法才会真正生成最终的 XML SQL，生成的时候可以用到上面的 configuration 和 ProviderContext 参数
             String sqlScript = cache.getSqlScript();
             if (log.isTraceEnabled()) {
@@ -150,6 +139,7 @@ public class Caching extends XMLLanguageDriver {
             }
             //缓存 sqlSource
             SqlSource sqlSource = super.createSqlSource(configuration, sqlScript, parameterType);
+            sqlSource = SqlSourceCustomize.SPI.customize(sqlSource, cache.getEntity(), ms, cache.getProviderContext());
             cachekeyMap.put(cacheKey, sqlSource);
             //取消cache对象的引用，减少内存占用
             if (USE_ONCE) {

@@ -92,7 +92,7 @@ public class AnnotationSqlScriptWrapper implements SqlScriptWrapper {
    * @param <T>
    * @return
    */
-  public <T> T newInstance(Class instanceClass, Object target, ElementType type, Annotation[] annotations) {
+  public <T> T newInstance(Class<T> instanceClass, Object target, ElementType type, Annotation[] annotations) {
     try {
       return (T) instanceClass.getConstructor(Object.class, ElementType.class, Annotation[].class).newInstance(target, type, annotations);
     } catch (Exception e) {

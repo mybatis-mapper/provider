@@ -16,6 +16,7 @@
 
 package io.mybatis.provider;
 
+import io.mybatis.provider.keysql.GenId;
 import io.mybatis.provider.util.Utils;
 import lombok.Getter;
 import lombok.Setter;
@@ -41,49 +42,73 @@ public class EntityColumn extends EntityProps<EntityColumn> {
    * 实体类字段
    */
   @Getter
-  protected final EntityField                  field;
+  protected final EntityField            field;
   /**
    * 所在实体类
    */
   @Getter
   @Setter
-  protected       EntityTable                  entityTable;
+  protected       EntityTable            entityTable;
   /**
    * 列名
    */
   @Getter
   @Setter
-  protected       String                       column;
+  protected       String                 column;
   /**
    * 是否为主键
    */
   @Getter
   @Setter
-  protected       boolean                      id;
+  protected       boolean                id;
+  /**
+   * 主键策略1，优先级1：是否使用 JDBC 方式获取主键，优先级最高，设置为 true 后，不对其他配置校验
+   */
+  @Getter
+  @Setter
+  protected       boolean                useGeneratedKeys;
+  /**
+   * 主键策略2，优先级2：取主键的 SQL，当前SQL只能在 INSERT 语句执行后执行，如果想要在 INSERT 语句执行前执行，可以使用 {@link #genId}
+   */
+  @Getter
+  @Setter
+  protected       String                 afterSql;
+  /**
+   * 主键策略3，优先级3：Java 方式生成主键，可以和发号器一类的服务配合使用
+   */
+  @Getter
+  @Setter
+  protected       Class<? extends GenId> genId;
+  /**
+   * 执行 genId 的时机，仅当 {@link #genId} 不为空时有效，默认插入前执行
+   */
+  @Getter
+  @Setter
+  protected       boolean                genIdExecuteBefore;
   /**
    * 排序方式
    */
   @Getter
   @Setter
-  protected       String                       orderBy;
+  protected       String                 orderBy;
   /**
    * 排序的优先级，数值越小优先级越高
    */
   @Getter
   @Setter
-  protected       int                          orderByPriority;
+  protected       int                    orderByPriority;
   /**
    * 是否查询字段
    */
   @Getter
   @Setter
-  protected       boolean                      selectable = true;
+  protected       boolean                selectable = true;
   /**
    * 是否插入字段
    */
   @Getter
   @Setter
-  protected       boolean                      insertable = true;
+  protected     boolean                insertable = true;
   /**
    * 是否更新字段
    */
@@ -268,6 +293,13 @@ public class EntityColumn extends EntityProps<EntityColumn> {
       return notNullTest(prefix) + " and " + property(prefix) + " != '' ";
     }
     return notNullTest();
+  }
+
+  /**
+   * 当前字段是否设置了主键策略
+   */
+  public boolean hasPrimaryKeyStrategy() {
+    return id && (useGeneratedKeys || (afterSql != null && !afterSql.isEmpty()) || genId != GenId.NULL.class);
   }
   //</editor-fold>
 

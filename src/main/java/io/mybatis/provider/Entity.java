@@ -16,6 +16,7 @@
 
 package io.mybatis.provider;
 
+import io.mybatis.provider.keysql.GenId;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.UnknownTypeHandler;
@@ -99,7 +100,7 @@ public @interface Entity {
    */
   @Retention(RetentionPolicy.RUNTIME)
   @Target(ElementType.FIELD)
-  public @interface Transient {
+  @interface Transient {
   }
 
   /**
@@ -122,6 +123,26 @@ public @interface Entity {
      * 标记字段是否为主键字段
      */
     boolean id() default false;
+
+    /**
+     * 主键策略1，优先级1：是否使用 JDBC 方式获取主键，优先级最高，设置为 true 后，不对其他配置校验
+     */
+    boolean useGeneratedKeys() default false;
+
+    /**
+     * 主键策略2，优先级2：取主键的 SQL，当前SQL只能在 INSERT 语句执行后执行，如果想要在 INSERT 语句执行前执行，可以使用 {@link #genId()}
+     */
+    String afterSql() default "";
+
+    /**
+     * 主键策略3，优先级3：Java 方式生成主键，可以和发号器一类的服务配合使用
+     */
+    Class<? extends GenId> genId() default GenId.NULL.class;
+
+    /**
+     * 执行 genId 的时机，仅当 {@link #genId()} 不为空时有效，默认插入前执行
+     */
+    boolean genIdExecuteBefore() default true;
 
     /**
      * 排序方式，默认空时不作为排序字段，只有手动设置 ASC 和 DESC 才有效

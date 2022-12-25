@@ -17,7 +17,6 @@
 package io.mybatis.provider;
 
 import org.apache.ibatis.builder.annotation.ProviderContext;
-import org.apache.ibatis.mapping.MappedStatement;
 
 import java.util.function.Supplier;
 
@@ -30,29 +29,24 @@ public class SqlCache {
   /**
    * 空对象
    */
-  public static final SqlCache                           NULL = new SqlCache(null, null, null, null);
+  public static final SqlCache         NULL = new SqlCache(null, null, null);
   /**
    * 执行方法上下文
    */
-  private final       ProviderContext                    providerContext;
+  private final       ProviderContext  providerContext;
   /**
    * 实体类信息
    */
-  private final       EntityTable                        entity;
+  private final       EntityTable      entity;
   /**
    * sql 提供者
    */
-  private final       Supplier<String>                   sqlScriptSupplier;
-  /**
-   * ms 定制处理
-   */
-  private final       SqlScript.MappedStatementCustomize customize;
+  private final       Supplier<String> sqlScriptSupplier;
 
-  SqlCache(ProviderContext providerContext, EntityTable entity, Supplier<String> sqlScriptSupplier, SqlScript.MappedStatementCustomize customize) {
+  SqlCache(ProviderContext providerContext, EntityTable entity, Supplier<String> sqlScriptSupplier) {
     this.providerContext = providerContext;
     this.entity = entity;
     this.sqlScriptSupplier = sqlScriptSupplier;
-    this.customize = customize;
   }
 
   /**
@@ -60,17 +54,6 @@ public class SqlCache {
    */
   public String getSqlScript() {
     return sqlScriptSupplier.get();
-  }
-
-  /**
-   * 对 ms 进行定制处理
-   *
-   * @param ms 当前方法对应的 MappedStatement
-   */
-  public void customize(MappedStatement ms) {
-    if (this.customize != null) {
-      this.customize.customize(entity, ms, providerContext);
-    }
   }
 
   /**
