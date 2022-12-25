@@ -45,9 +45,10 @@ public class User3 {
   }
 
   public static class GenIdLong implements GenId<Long> {
+    private static long id = 1000;
     @Override
     public Long genId(EntityTable table, EntityColumn column) {
-      return System.currentTimeMillis() & 0xffff;
+      return id++;
     }
   }
 }
