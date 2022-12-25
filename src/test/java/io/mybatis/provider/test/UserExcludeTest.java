@@ -41,6 +41,9 @@ public class UserExcludeTest {
     Assert.assertEquals(2, entityTable.whereColumns().size());
 
     Assert.assertEquals("user", entityTable.table());
+    Assert.assertEquals("catalog", entityTable.catalog());
+    Assert.assertEquals("schema", entityTable.schema());
+    Assert.assertEquals("catalog.schema.user", entityTable.tableName());
     Assert.assertEquals("ID,name", entityTable.baseColumnList());
     Assert.assertEquals("ID AS id,name AS username", entityTable.baseColumnAsPropertyList());
 

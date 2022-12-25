@@ -19,6 +19,8 @@ package io.mybatis.provider.model;
 import io.mybatis.provider.Entity;
 
 @Entity.Table(value = "user",
+    catalog = "catalog",
+    schema = "schema",
     excludeSuperClasses = Role.class,
     excludeFieldTypes = User1.class,
     excludeFields = "age")

@@ -28,7 +28,7 @@ public class EntityInfoMapperTest {
     Assert.assertEquals(User.class, userMapper.entityClass());
 
     EntityTable entityTable = userMapper.entityTable();
-    Assert.assertEquals("sys_user", entityTable.table());
+    Assert.assertEquals("public.sys_user", entityTable.tableName());
   }
 
   interface UserMapper extends EntityInfoMapper<User> {

@@ -16,6 +16,7 @@
 
 package io.mybatis.provider.defaults;
 
+import io.mybatis.config.ConfigHelper;
 import io.mybatis.provider.Entity;
 import io.mybatis.provider.EntityTable;
 import io.mybatis.provider.EntityTableFactory;
@@ -34,6 +35,8 @@ public class DefaultEntityTableFactory implements EntityTableFactory {
       Entity.Table table = entityClass.getAnnotation(Entity.Table.class);
       EntityTable entityTable = EntityTable.of(entityClass)
           .table(table.value().isEmpty() ? Style.getStyle(table.style()).tableName(entityClass) : table.value())
+          .catalog(table.catalog().isEmpty() ? ConfigHelper.getStr("mybatis.provider.catalog") : table.catalog())
+          .schema(table.schema().isEmpty() ? ConfigHelper.getStr("mybatis.provider.schema") : table.schema())
           .style(table.style())
           .resultMap(table.resultMap())
           .autoResultMap(table.autoResultMap())

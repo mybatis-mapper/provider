@@ -39,6 +39,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 实体表接口，记录实体和表的关系
@@ -55,6 +56,18 @@ public class EntityTable extends EntityProps<EntityTable> {
   @Getter
   @Setter
   protected           String             table;
+  /**
+   * catalog 名称，配置后，会在表名前面加上 catalog 名称，规则为：catalog.schema.tableName，支持全局 mybatis.provider.catalog 配置
+   */
+  @Getter
+  @Setter
+  protected           String             catalog;
+  /**
+   * schema 名称，配置后，会在表名前面加上 schema 名称，规则为：catalog.schema.tableName，支持全局 mybatis.provider.schema 配置
+   */
+  @Getter
+  @Setter
+  protected           String             schema;
   /**
    * 实体类和字段转表名和字段名方式
    */
@@ -77,45 +90,45 @@ public class EntityTable extends EntityProps<EntityTable> {
    */
   @Getter
   @Setter
-  protected boolean            ready;
+  protected           boolean            ready;
   /**
    * 使用指定的 &lt;resultMap&gt;
    */
   @Getter
   @Setter
-  protected String             resultMap;
+  protected           String             resultMap;
   /**
    * 自动根据字段生成 &lt;resultMap&gt;
    */
   @Getter
   @Setter
-  protected boolean            autoResultMap;
+  protected           boolean            autoResultMap;
   /**
    * 已初始化自动ResultMap
    */
-  protected List<ResultMap>    resultMaps;
+  protected           List<ResultMap>    resultMaps;
   /**
    * 排除指定父类的所有字段
    */
   @Getter
   @Setter
-  protected Class<?>[]         excludeSuperClasses;
+  protected           Class<?>[]         excludeSuperClasses;
   /**
    * 排除指定类型的字段
    */
   @Getter
   @Setter
-  protected Class<?>[]         excludeFieldTypes;
+  protected           Class<?>[]         excludeFieldTypes;
   /**
    * 排除指定字段名的字段
    */
   @Getter
   @Setter
-  protected String[]           excludeFields;
+  protected           String[]           excludeFields;
   /**
    * 已经初始化的配置
    */
-  protected Set<Configuration> initConfiguration = new HashSet<>();
+  protected           Set<Configuration> initConfiguration = new HashSet<>();
   //<editor-fold desc="基础方法，必须实现的方法">
 
   protected EntityTable(Class<?> entityClass) {
@@ -130,7 +143,9 @@ public class EntityTable extends EntityProps<EntityTable> {
    * 获取 SQL 语句中使用的表名
    */
   public String tableName() {
-    return table();
+    return Stream.of(catalog(), schema(), table())
+        .filter(s -> s != null && !s.isEmpty())
+        .collect(Collectors.joining("."));
   }
 
   /**
@@ -564,16 +579,16 @@ public class EntityTable extends EntityProps<EntityTable> {
     if (this == o) return true;
     if (!(o instanceof EntityTable)) return false;
     EntityTable entity = (EntityTable) o;
-    return table().equals(entity.table());
+    return tableName().equals(entity.tableName());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(table());
+    return Objects.hash(tableName());
   }
 
   @Override
   public String toString() {
-    return table();
+    return tableName();
   }
 }
