@@ -20,8 +20,8 @@ import io.mybatis.config.ConfigHelper;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Accessors(fluent = true)
 public class EntityProps<T extends EntityProps> {
@@ -115,7 +115,7 @@ public class EntityProps<T extends EntityProps> {
     if (this.props == null) {
       synchronized (this) {
         if (this.props == null) {
-          this.props = new HashMap<>();
+          this.props = new ConcurrentHashMap<>();
         }
       }
     }

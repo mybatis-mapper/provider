@@ -27,7 +27,6 @@ import org.apache.ibatis.scripting.xmltags.XMLLanguageDriver;
 import org.apache.ibatis.session.Configuration;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -128,7 +127,7 @@ public class Caching extends XMLLanguageDriver {
             }
             //初始化 EntityTable，每个方法执行一次，可以利用 configuration 进行一些特殊操作
             cache.getEntity().initRuntimeContext(configuration, cache.getProviderContext(), cacheKey);
-            Map<String, SqlSource> cachekeyMap = CONFIGURATION_CACHE_KEY_MAP.computeIfAbsent(configuration, k -> new HashMap<>());
+            Map<String, SqlSource> cachekeyMap = CONFIGURATION_CACHE_KEY_MAP.computeIfAbsent(configuration, k -> new ConcurrentHashMap<>());
             //定制化处理 ms
             MappedStatement ms = configuration.getMappedStatement(cacheKey);
             MsCustomize.SPI.customize(cache.getEntity(), ms, cache.getProviderContext());
