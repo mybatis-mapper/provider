@@ -58,11 +58,11 @@
     <argLine>-Dfile.encoding=UTF-8</argLine>
 
     <mybatis-config.version>1.1.1</mybatis-config.version>
-    <logback.version>1.2.11</logback.version>
-    <mybatis.version>3.5.11</mybatis.version>
-    <lombok.version>1.18.22</lombok.version>
+    <logback.version>1.4.6</logback.version>
+    <mybatis.version>3.5.13</mybatis.version>
+    <lombok.version>1.18.26</lombok.version>
     <hsqldb.version>2.5.2</hsqldb.version>
-    <junit.version>4.13</junit.version>
+    <junit.version>4.13.2</junit.version>
   </properties>
 
   <dependencies>
