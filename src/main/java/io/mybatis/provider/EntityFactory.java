@@ -56,10 +56,8 @@ public abstract class EntityFactory {
    * @return 实体类信息
    */
   public static EntityTable create(Class<?> entityClass) {
-    //处理EntityTable
-    EntityTableFactory.Chain entityTableFactoryChain = Instance.getEntityTableFactoryChain();
     //创建 EntityTable，不处理列（字段），此时返回的 EntityTable 已经经过了所有处理链的加工
-    EntityTable entityTable = entityTableFactoryChain.createEntityTable(entityClass);
+    EntityTable entityTable = Holder.entityTableFactoryChain.createEntityTable(entityClass);
     if (entityTable == null) {
       throw new NullPointerException("Unable to get " + entityClass.getName() + " entity class information");
     }
@@ -67,8 +65,6 @@ public abstract class EntityFactory {
     if (!entityTable.ready()) {
       synchronized (entityClass) {
         if (!entityTable.ready()) {
-          //处理EntityColumn
-          EntityColumnFactory.Chain entityColumnFactoryChain = Instance.getEntityColumnFactoryChain();
           //未处理的需要获取字段
           Class<?> declaredClass = entityClass;
           boolean isSuperclass = false;
@@ -86,7 +82,7 @@ public abstract class EntityFactory {
                 if (entityTable.isExcludeField(entityField)) {
                   continue;
                 }
-                Optional<List<EntityColumn>> optionalEntityColumns = entityColumnFactoryChain.createEntityColumn(entityTable, entityField);
+                Optional<List<EntityColumn>> optionalEntityColumns = Holder.entityColumnFactoryChain.createEntityColumn(entityTable, entityField);
                 optionalEntityColumns.ifPresent(columns -> columns.forEach(entityTable::addColumn));
               }
             }
@@ -122,43 +118,9 @@ public abstract class EntityFactory {
   /**
    * 实例
    */
-  static class Instance {
-    private static volatile EntityTableFactory.Chain  entityTableFactoryChain;
-    private static volatile EntityColumnFactory.Chain entityColumnFactoryChain;
-
-    /**
-     * 获取处理实体的工厂链
-     *
-     * @return 实例
-     */
-    public static EntityTableFactory.Chain getEntityTableFactoryChain() {
-      if (entityTableFactoryChain == null) {
-        synchronized (EntityFactory.class) {
-          if (entityTableFactoryChain == null) {
-            List<EntityTableFactory> entityTableFactories = ServiceLoaderUtil.getInstances(EntityTableFactory.class);
-            entityTableFactoryChain = new DefaultEntityTableFactoryChain(entityTableFactories);
-          }
-        }
-      }
-      return entityTableFactoryChain;
-    }
-
-    /**
-     * 获取处理列的工厂链
-     *
-     * @return 实例
-     */
-    public static EntityColumnFactory.Chain getEntityColumnFactoryChain() {
-      if (entityColumnFactoryChain == null) {
-        synchronized (EntityFactory.class) {
-          if (entityColumnFactoryChain == null) {
-            List<EntityColumnFactory> entityColumnFactories = ServiceLoaderUtil.getInstances(EntityColumnFactory.class);
-            entityColumnFactoryChain = new DefaultEntityColumnFactoryChain(entityColumnFactories);
-          }
-        }
-      }
-      return entityColumnFactoryChain;
-    }
+  static class Holder {
+    static final EntityTableFactory.Chain  entityTableFactoryChain  = new DefaultEntityTableFactoryChain(ServiceLoaderUtil.getInstances(EntityTableFactory.class));
+    static final EntityColumnFactory.Chain entityColumnFactoryChain = new DefaultEntityColumnFactoryChain(ServiceLoaderUtil.getInstances(EntityColumnFactory.class));
   }
 
 }

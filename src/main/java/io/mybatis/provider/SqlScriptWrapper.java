@@ -37,7 +37,7 @@ public interface SqlScriptWrapper extends Order {
    * @return
    */
   static SqlScript wrapSqlScript(ProviderContext context, EntityTable entity, SqlScript sqlScript) {
-    for (SqlScriptWrapper wrapper : Instance.getEntityTableFactoryChain()) {
+    for (SqlScriptWrapper wrapper : Holder.sqlScriptWrappers) {
       sqlScript = wrapper.wrap(context, entity, sqlScript);
     }
     return sqlScript;
@@ -56,24 +56,8 @@ public interface SqlScriptWrapper extends Order {
   /**
    * 实例
    */
-  class Instance {
-    private static volatile List<SqlScriptWrapper> sqlScriptWrappers;
-
-    /**
-     * 获取处理实体的工厂链
-     *
-     * @return 实例
-     */
-    public static List<SqlScriptWrapper> getEntityTableFactoryChain() {
-      if (sqlScriptWrappers == null) {
-        synchronized (EntityFactory.class) {
-          if (sqlScriptWrappers == null) {
-            sqlScriptWrappers = ServiceLoaderUtil.getInstances(SqlScriptWrapper.class);
-          }
-        }
-      }
-      return sqlScriptWrappers;
-    }
+  class Holder {
+    static final List<SqlScriptWrapper> sqlScriptWrappers = ServiceLoaderUtil.getInstances(SqlScriptWrapper.class);
   }
 
 }
