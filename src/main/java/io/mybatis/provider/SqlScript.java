@@ -128,6 +128,16 @@ public interface SqlScript {
   }
 
   /**
+   * 生成 &lt;if test="_parameter == null"&gt; 标签包装的 xml 结构，允许参数为空时使用，
+   *
+   * @param content 标签中的内容
+   * @return &lt;if test="_parameter == null"&gt; 标签包装的 xml 结构
+   */
+  default String ifParameterIsNull(SqlScript.LRSupplier content) {
+    return String.format("<if test=\"_parameter == null\">%s\n</if> ", content.getWithLR());
+  }
+
+  /**
    * 增加对参数的校验，参数不能为空
    *
    * @param message 提示信息
