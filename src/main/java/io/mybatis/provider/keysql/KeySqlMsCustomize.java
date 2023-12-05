@@ -74,12 +74,12 @@ public class KeySqlMsCustomize implements MsCustomize {
         MetaObject metaObject = ms.getConfiguration().newMetaObject(ms);
         metaObject.setValue("keyGenerator", Jdbc3KeyGenerator.INSTANCE);
         metaObject.setValue("keyProperties", new String[]{id.property()});
-      } else if (!id.afterSql().isEmpty()) {
+      } else if (id.afterSql() != null && !id.afterSql().isEmpty()) {
         KeyGenerator keyGenerator = handleSelectKeyGenerator(ms, id, id.afterSql(), false);
         MetaObject metaObject = ms.getConfiguration().newMetaObject(ms);
         metaObject.setValue("keyGenerator", keyGenerator);
         metaObject.setValue("keyProperties", new String[]{id.property()});
-      } else if (id.genId() != GenId.NULL.class) {
+      } else if (id.genId() != null && id.genId() != GenId.NULL.class) {
         Class<? extends GenId> genIdClass = id.genId();
         boolean executeBefore = id.genIdExecuteBefore();
         GenId<?> genId = null;
