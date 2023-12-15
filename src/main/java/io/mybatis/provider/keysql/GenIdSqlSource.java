@@ -34,9 +34,7 @@ public class GenIdSqlSource implements SqlSource {
   @Override
   public BoundSql getBoundSql(Object parameterObject) {
     // 初始化时，会漏掉第一次执行，这里需要补上
-    if (keyGenerator.runFirstTime()) {
-      keyGenerator.genIdFirstTime(parameterObject);
-    }
+    keyGenerator.prepare(parameterObject);
     return sqlSource.getBoundSql(parameterObject);
   }
 

@@ -16,26 +16,32 @@
 
 package io.mybatis.provider.keysql;
 
+import io.mybatis.config.ConfigHelper;
 import io.mybatis.provider.EntityColumn;
 import io.mybatis.provider.EntityTable;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.keygen.KeyGenerator;
 import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.session.Configuration;
 
 import java.sql.Statement;
-import java.util.Date;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 生成主键
  */
 public class GenIdKeyGenerator implements KeyGenerator {
-  private final GenId<?>      genId;
-  private final EntityTable   table;
-  private final EntityColumn  column;
-  private final Configuration configuration;
-  private final boolean       executeBefore;
-  private       Date          firstTime;
+  /**
+   * 并发度，默认1000并发，当第一次并发insert时，实际并发不超过该值时，可以保证不会出现before=true时漏生成主键
+   */
+  private static volatile Integer       CONCURRENCY;
+  private final           GenId<?>      genId;
+  private final           EntityTable   table;
+  private final           EntityColumn  column;
+  private final           Configuration configuration;
+  private final           boolean       executeBefore;
+  private                 AtomicInteger count = new AtomicInteger(0);
 
   public GenIdKeyGenerator(GenId<?> genId, EntityTable table, EntityColumn column, Configuration configuration, boolean executeBefore) {
     this.genId = genId;
@@ -43,6 +49,17 @@ public class GenIdKeyGenerator implements KeyGenerator {
     this.column = column;
     this.configuration = configuration;
     this.executeBefore = executeBefore;
+  }
+
+  private static int getConcurrency() {
+    if (CONCURRENCY == null) {
+      synchronized (GenIdKeyGenerator.class) {
+        if (CONCURRENCY == null) {
+          CONCURRENCY = ConfigHelper.getInt("mybatis.provider.genId.concurrency", 1000);
+        }
+      }
+    }
+    return CONCURRENCY;
   }
 
   @Override
@@ -59,22 +76,31 @@ public class GenIdKeyGenerator implements KeyGenerator {
     }
   }
 
-  /**
-   * 只有第一次需要 executeBefore 时，此时已经漏掉了 processBefore 的执行时机，这里需要额外执行一次
-   */
-  public void genIdFirstTime(Object parameter) {
-    if (runFirstTime()) {
-      this.firstTime = new Date();
-      genId(parameter);
-    }
-  }
-
   public void genId(Object parameter) {
     Object id = genId.genId(table, column);
     configuration.newMetaObject(parameter).setValue(column.property(), id);
   }
 
-  public boolean runFirstTime() {
-    return executeBefore && this.firstTime == null;
+  /**
+   * 准备参数，当executeBefore=true时，需要在执行前生成主键，如果是在ms初始化前进来该方法，就没有生成id，这里需要补充执行一次
+   * <p>
+   * ms初始化之后再进来时，会按照selectKey的方式自动调用该方法，不需要再这里补充调用。
+   * <p>
+   * 这里设置 {@link #CONCURRENCY} 是为了避免后续ms正常后，这里判断为空会多此一举，所以设置一个阈值，超过阈值后就不再判断了。
+   * <p>
+   * 只有当第一次出现并发插入超过 {@link #CONCURRENCY} 值时，才可能会出现漏掉id的情况。
+   */
+  public void prepare(Object parameter) {
+    if (executeBefore) {
+      if (count.get() < getConcurrency()) {
+        count.incrementAndGet();
+        MetaObject metaObject = configuration.newMetaObject(parameter);
+        if (metaObject.getValue(column.property()) == null) {
+          Object id = genId.genId(table, column);
+          metaObject.setValue(column.property(), id);
+        }
+      }
+    }
   }
+
 }
