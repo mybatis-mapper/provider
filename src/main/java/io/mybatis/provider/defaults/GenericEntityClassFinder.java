@@ -104,9 +104,7 @@ public abstract class GenericEntityClassFinder implements EntityClassFinder {
    */
   protected Optional<Class<?>> getEntityClassByType(Type type) {
     if (type instanceof Class) {
-      if (isEntityClass((Class<?>) type)) {
-        return Optional.of((Class<?>) type);
-      }
+      return Optional.of((Class<?>) type);
     } else if (type instanceof GenericTypeResolver.ParameterizedTypeImpl) {
       return getEntityClassByTypes(((GenericTypeResolver.ParameterizedTypeImpl) type).getActualTypeArguments());
     } else if (type instanceof GenericTypeResolver.WildcardTypeImpl) {
@@ -130,7 +128,7 @@ public abstract class GenericEntityClassFinder implements EntityClassFinder {
   protected Optional<Class<?>> getEntityClassByTypes(Type[] types) {
     for (Type type : types) {
       Optional<Class<?>> optionalClass = getEntityClassByType(type);
-      if (optionalClass.isPresent()) {
+      if (optionalClass.isPresent() && isEntityClass(optionalClass.get())) {
         return optionalClass;
       }
     }
