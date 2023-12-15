@@ -26,6 +26,10 @@ import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.session.Configuration;
 
 import java.sql.Statement;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -76,9 +80,30 @@ public class GenIdKeyGenerator implements KeyGenerator {
     }
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   public void genId(Object parameter) {
-    Object id = genId.genId(table, column);
-    configuration.newMetaObject(parameter).setValue(column.property(), id);
+    if (parameter != null) {
+      if (table.entityClass().isInstance(parameter)) {
+        MetaObject metaObject = configuration.newMetaObject(parameter);
+        if (metaObject.getValue(column.property()) == null) {
+          Object id = genId.genId(table, column);
+          metaObject.setValue(column.property(), id);
+        }
+      } else if (parameter instanceof Map) {
+        new HashSet<>(((Map<String, Object>) parameter).values()).forEach(this::genId);
+      } else if (parameter instanceof Iterator) {
+        Iterator iterator = (Iterator) parameter;
+        Set<Object> set = new HashSet();
+        while (iterator.hasNext()) {
+          set.add(iterator.next());
+        }
+        set.forEach(this::genId);
+      } else if (parameter instanceof Iterable) {
+        Set<Object> set = new HashSet();
+        ((Iterable) parameter).forEach(set::add);
+        set.forEach(this::genId);
+      }
+    }
   }
 
   /**
@@ -94,11 +119,7 @@ public class GenIdKeyGenerator implements KeyGenerator {
     if (executeBefore) {
       if (count.get() < getConcurrency()) {
         count.incrementAndGet();
-        MetaObject metaObject = configuration.newMetaObject(parameter);
-        if (metaObject.getValue(column.property()) == null) {
-          Object id = genId.genId(table, column);
-          metaObject.setValue(column.property(), id);
-        }
+        genId(parameter);
       }
     }
   }

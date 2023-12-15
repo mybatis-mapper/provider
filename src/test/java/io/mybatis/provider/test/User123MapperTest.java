@@ -68,10 +68,13 @@ public class User123MapperTest extends BaseTest {
       u3.setUsername("hello");
       Assert.assertEquals(1, userMapper.insertUser3(u3));
       Assert.assertNotNull(u3.getId());
+      u3.setId(null);
       Assert.assertEquals(1, userMapper.insertUser3(u3));
       Assert.assertNotNull(u3.getId());
+      u3.setId(null);
       Assert.assertEquals(1, userMapper.insertUser3(u3));
       Assert.assertNotNull(u3.getId());
+      u3.setId(null);
       Assert.assertEquals(1, userMapper.insertUser3(u3));
       Assert.assertNotNull(u3.getId());
     }
