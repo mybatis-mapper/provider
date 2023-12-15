@@ -20,8 +20,10 @@ import io.mybatis.provider.util.ServiceLoaderUtil;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 根据类型和方法等信息获取实体类类型，可以通过 SPI 方式替换默认实现
@@ -29,6 +31,41 @@ import java.util.Optional;
  * @author liuzh
  */
 public interface EntityClassFinder extends Order {
+  /**
+   * 缓存，避免方法执行时每次都查找
+   */
+  Map<MapperTypeMethod, Optional<Class<?>>> ENTITY_CLASS_MAP = new ConcurrentHashMap<>();
+
+  /**
+   * Mapper 接口和方法，用作缓存 Key
+   */
+  class MapperTypeMethod {
+    private final Class<?> mapperType;
+    private final Method   mapperMethod;
+
+    public MapperTypeMethod(Class<?> mapperType, Method mapperMethod) {
+      this.mapperType = mapperType;
+      this.mapperMethod = mapperMethod;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      MapperTypeMethod that = (MapperTypeMethod) o;
+      return Objects.equals(mapperType, that.mapperType) && Objects.equals(mapperMethod, that.mapperMethod);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(mapperType, mapperMethod);
+    }
+
+    @Override
+    public String toString() {
+      return (mapperType != null ? mapperType.getSimpleName() + "." : "") + (mapperMethod != null ? mapperMethod.getName() : "");
+    }
+  }
 
   /**
    * 查找当前方法对应的实体类
@@ -39,13 +76,16 @@ public interface EntityClassFinder extends Order {
    */
   static Optional<Class<?>> find(Class<?> mapperType, Method mapperMethod) {
     Objects.requireNonNull(mapperType);
-    for (EntityClassFinder instance : EntityClassFinderInstance.getInstances()) {
-      Optional<Class<?>> optionalClass = instance.findEntityClass(mapperType, mapperMethod);
-      if (optionalClass.isPresent()) {
-        return optionalClass;
-      }
-    }
-    return Optional.empty();
+    return ENTITY_CLASS_MAP.computeIfAbsent(new MapperTypeMethod(mapperType, mapperMethod),
+        mapperTypeMethod -> {
+          for (EntityClassFinder instance : EntityClassFinderInstance.getInstances()) {
+            Optional<Class<?>> optionalClass = instance.findEntityClass(mapperType, mapperMethod);
+            if (optionalClass.isPresent()) {
+              return optionalClass;
+            }
+          }
+          return Optional.empty();
+        });
   }
 
   /**
