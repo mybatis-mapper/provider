@@ -48,6 +48,8 @@ public class ConfigHelperTest {
 
   @Test
   public void test() {
+    // ProviderUserConfig < EnvConfig(电脑中加载的username) < SystemConfig, 这里在ConfigHelper调用前设定username属性将读取SystemConfig
+    System.setProperty("username", "liuzh");
     Assert.assertEquals("liuzh", ConfigHelper.getStr("username"));
     Assert.assertEquals("abel533@gmail.com", ConfigHelper.getStr("email"));
     Assert.assertEquals("upper_underscore", ConfigHelper.getStr("mybatis.provider.style"));
