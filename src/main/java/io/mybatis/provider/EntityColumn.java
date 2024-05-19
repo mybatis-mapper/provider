@@ -299,7 +299,7 @@ public class EntityColumn extends EntityProps<EntityColumn> {
    * 当前字段是否设置了主键策略
    */
   public boolean hasPrimaryKeyStrategy() {
-    return id && (useGeneratedKeys || (afterSql != null && !afterSql.isEmpty()) || genId != GenId.NULL.class);
+    return id && (useGeneratedKeys || (afterSql != null && !afterSql.isEmpty()) || (genId != null && genId != GenId.NULL.class));
   }
   //</editor-fold>
 
