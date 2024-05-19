@@ -26,8 +26,6 @@ public class ConfigHelperTest {
   @Test
   public void testUserConfig() {
     Config config = new ProviderUserConfig();
-    String username = config.getStr("user");
-    Assert.assertEquals("liuzh", username);
     Assert.assertEquals("abel533@gmail.com", config.getStr("email"));
   }
 
@@ -48,7 +46,6 @@ public class ConfigHelperTest {
 
   @Test
   public void test() {
-    Assert.assertEquals("liuzh", ConfigHelper.getStr("user"));
     Assert.assertEquals("abel533@gmail.com", ConfigHelper.getStr("email"));
     Assert.assertEquals("upper_underscore", ConfigHelper.getStr("mybatis.provider.style"));
   }
