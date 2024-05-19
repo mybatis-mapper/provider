@@ -53,13 +53,14 @@ public class DefaultEntityColumnFactory implements EntityColumnFactory {
         entityColumn.setProp(prop);
       }
       return Optional.of(Arrays.asList(entityColumn));
-    } else if (!field.isAnnotationPresent(Entity.Transient.class)) {
+    } else if (field.isAnnotationPresent(Entity.Transient.class)) {
+      return IGNORE;
+    } else {
       return Optional.of(Arrays.asList(EntityColumn.of(field)
           .column(Style.getStyle(entityTable.style()).columnName(entityTable, field))
           .numericScale("")
           .jdbcType(JdbcType.UNDEFINED)));
     }
-    return Optional.empty();
   }
 
 }

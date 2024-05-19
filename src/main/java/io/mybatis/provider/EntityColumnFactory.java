@@ -16,6 +16,7 @@
 
 package io.mybatis.provider;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,6 +26,10 @@ import java.util.Optional;
  * @author liuzh
  */
 public interface EntityColumnFactory extends Order {
+  /**
+   * 忽略字段
+   */
+  Optional<List<EntityColumn>> IGNORE = Optional.of(Collections.emptyList());
 
   /**
    * 创建列信息，一个字段可能不是列，也可能是列，还有可能对应多个列（例如 ValueObject对象）
