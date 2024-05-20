@@ -73,6 +73,11 @@ public class FnTest {
       Assert.assertEquals(columnSize + 2, Fn.FN_COLUMN_MAP.size());
       Assert.assertEquals(fieldSize + 2, Fn.FN_CLASS_FIELD_MAP.size());
     }
+    for (int i = 0; i < 100; i++) {
+      Fn.of(User.class, User::getUserName);
+      Assert.assertEquals(columnSize + 3, Fn.FN_COLUMN_MAP.size());
+      Assert.assertEquals(fieldSize + 3, Fn.FN_CLASS_FIELD_MAP.size());
+    }
   }
 
   public static class BaseId {

@@ -184,6 +184,18 @@ public interface Fn<T, R> extends Function<T, R>, Serializable {
       return fn.apply(t);
     }
 
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      FnImpl<?, ?> fnImpl = (FnImpl<?, ?>) o;
+      return Objects.equals(entityClass, fnImpl.entityClass) && Objects.equals(fn, fnImpl.fn);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(entityClass, fn);
+    }
   }
 
   /**
