@@ -64,12 +64,12 @@ public class FnTest {
     int columnSize = Fn.FN_COLUMN_MAP.size();
     int fieldSize = Fn.FN_CLASS_FIELD_MAP.size();
     for (int i = 0; i < 100; i++) {
-      System.out.println(((Fn<User, Object>) User::getUserName).toColumn());
+      ((Fn<User, Object>) User::getUserName).toColumn();
       Assert.assertEquals(columnSize + 1, Fn.FN_COLUMN_MAP.size());
       Assert.assertEquals(fieldSize + 1, Fn.FN_CLASS_FIELD_MAP.size());
     }
     for (int i = 0; i < 100; i++) {
-      System.out.println(Fn.field(User.class, "userName").toColumn());
+      Fn.field(User.class, "userName").toColumn();
       Assert.assertEquals(columnSize + 2, Fn.FN_COLUMN_MAP.size());
       Assert.assertEquals(fieldSize + 2, Fn.FN_CLASS_FIELD_MAP.size());
     }
