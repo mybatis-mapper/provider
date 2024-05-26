@@ -7,12 +7,31 @@
 当前项目没有直接提供可用的通用方法，方法在 **mybatis-mapper/mapper**( [gitee](https://gitee.com/mybatis-mapper/mapper)
 | [GitHub](https://github.com/mybatis-mapper/mapper) )中提供。
 
+注解详细使用文档： [https://mapper.mybatis.io/docs/v2.x/3.1.entity.html](https://mapper.mybatis.io/docs/v2.x/3.1.entity.html)
+
 ## 注解
 
 核心提供了一套实体类的注解，简单示例如下：
 
 ```java
 
+@Entity.Table("sys_user")
+public class User {
+  @Entity.Column(id = true, useGeneratedKeys = true)
+  private Long id;
+  private String name;
+  private boolean admin;
+  private Integer seq;
+  private Double points;
+  private String password;
+  private Date whenCreated;
+  private String info;
+  private String noEntityColumn;
+}
+```
+
+2.x 版本默认将所有字段映射为表字段，使用驼峰转小写下划线方式，还可以像下面这样给所有字段加注解：
+```java
 @Entity.Table(value = "user")
 public class User {
   @Entity.Column(id = true)
@@ -80,13 +99,12 @@ class DemoProvider {
 
 `SqlScript.caching` 会缓存拼接 SQL 的 lambda 方法，并且返回方法的 id。
 
-> **特别注意，这里返回的不是 sql，而且缓存 SQL 后的 key**  
+> **特别注意，这里返回的不是 sql，而且缓存 SQL 后的 key**
 > key值形式如：`io.mybatis.mapper.UserMapper.deleteByPrimaryKey`。
 
 上面方法在执行时，最终拼接的 SQL 示例如下：
 
 ```xml
-
 <script>
   DELETE FROM user WHERE id = #{id}
 </script>
