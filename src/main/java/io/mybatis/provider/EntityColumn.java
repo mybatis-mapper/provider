@@ -182,8 +182,20 @@ public class EntityColumn extends EntityProps<EntityColumn> {
   public String variables(String prefix) {
     return "#{" + property(prefix)
         + jdbcTypeVariables().orElse("")
+        + javaTypeVariables().orElse("")
         + typeHandlerVariables().orElse("")
         + numericScaleVariables().orElse("") + "}";
+  }
+
+  /**
+   * java类型 {, javaType=java.lang.String}
+   */
+  public Optional<String> javaTypeVariables() {
+    Class<?> javaType = this.javaType();
+    if (javaType != null) {
+      return Optional.of(", javaType=" + javaType.getName());
+    }
+    return Optional.empty();
   }
 
   /**
