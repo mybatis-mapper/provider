@@ -87,7 +87,7 @@ public class UserMoreTest {
     Assert.assertFalse(pointsColumn.numericScale().isEmpty());
     Assert.assertEquals("4", pointsColumn.numericScale());
     Assert.assertEquals(", numericScale=4", pointsColumn.numericScaleVariables().get());
-    Assert.assertEquals("#{points, numericScale=4}", pointsColumn.variables());
+    Assert.assertEquals("#{points, javaType=java.lang.Double, numericScale=4}", pointsColumn.variables());
     Assert.assertFalse(pointsColumn.id());
     Assert.assertTrue(pointsColumn.updatable());
     Assert.assertTrue(pointsColumn.selectable());
@@ -104,7 +104,7 @@ public class UserMoreTest {
     EntityColumn whenCreatedColumn = column("whenCreated");
     Assert.assertEquals("when_created", whenCreatedColumn.column());
     Assert.assertEquals(JdbcType.TIMESTAMP, whenCreatedColumn.jdbcType());
-    Assert.assertEquals("#{whenCreated, jdbcType=TIMESTAMP}", whenCreatedColumn.variables());
+    Assert.assertEquals("#{whenCreated, jdbcType=TIMESTAMP, javaType=java.util.Date}", whenCreatedColumn.variables());
     Assert.assertTrue(whenCreatedColumn.numericScale().isEmpty());
     Assert.assertFalse(whenCreatedColumn.id());
     Assert.assertTrue(whenCreatedColumn.selectable());
@@ -114,7 +114,7 @@ public class UserMoreTest {
     EntityColumn infoColumn = column("info");
     Assert.assertEquals("info", infoColumn.column());
     Assert.assertEquals(StringTypeHandler.class, infoColumn.typeHandler());
-    Assert.assertEquals("#{info, typeHandler=org.apache.ibatis.type.StringTypeHandler}", infoColumn.variables());
+    Assert.assertEquals("#{info, javaType=java.lang.String, typeHandler=org.apache.ibatis.type.StringTypeHandler}", infoColumn.variables());
     Assert.assertTrue(infoColumn.numericScale().isEmpty());
     Assert.assertFalse(infoColumn.id());
     Assert.assertTrue(infoColumn.selectable());

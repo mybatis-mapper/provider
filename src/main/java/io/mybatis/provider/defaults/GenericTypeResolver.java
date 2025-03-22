@@ -36,12 +36,13 @@ public class GenericTypeResolver {
   }
 
   /**
-   * 方法来自 {@link MapperAnnotationBuilder#getReturnType(Method)}
+   * 方法来自 {@link MapperAnnotationBuilder#getReturnType(Method, Class)}
    *
    * @param method  方法
    * @param srcType 方法所属类
-   * @return
+   * @return 方法返回值实际类型
    */
+  @SuppressWarnings("JavadocReference")
   public static Class<?> getReturnType(Method method, Class<?> srcType) {
     Class<?> returnType = method.getReturnType();
     Type resolvedReturnType = resolveReturnType(method, srcType);
