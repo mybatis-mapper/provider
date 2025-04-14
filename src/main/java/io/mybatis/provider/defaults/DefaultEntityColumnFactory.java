@@ -37,6 +37,7 @@ public class DefaultEntityColumnFactory implements EntityColumnFactory {
       EntityColumn entityColumn = EntityColumn.of(field)
           .column(column.value().isEmpty() ? Style.getStyle(entityTable.style()).columnName(entityTable, field) : column.value())
           .id(column.id())
+          .nullable(column.nullable())
           .useGeneratedKeys(column.useGeneratedKeys())
           .afterSql(column.afterSql())
           .genId(column.genId())

@@ -150,6 +150,11 @@ public @interface Entity {
     boolean id() default false;
 
     /**
+     * 标记字段是否可以为空
+     */
+    boolean nullable() default true;
+
+    /**
      * 主键策略1，优先级1：是否使用 JDBC 方式获取主键，优先级最高，设置为 true 后，不对其他配置校验
      */
     boolean useGeneratedKeys() default false;

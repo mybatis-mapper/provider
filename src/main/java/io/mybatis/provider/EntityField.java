@@ -45,6 +45,10 @@ public class EntityField {
     this.field.setAccessible(true);
   }
 
+  public Field getField() {
+    return field;
+  }
+
   /**
    * @return 当前字段所在的类
    */

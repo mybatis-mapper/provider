@@ -62,6 +62,12 @@ public class EntityColumn extends EntityProps<EntityColumn> {
   @Setter
   protected       boolean                id;
   /**
+   * 是否可以为空
+   */
+  @Getter
+  @Setter
+  protected       boolean                nullable;
+  /**
    * 主键策略1，优先级1：是否使用 JDBC 方式获取主键，优先级最高，设置为 true 后，不对其他配置校验
    */
   @Getter
